@@ -84,7 +84,7 @@ def load_movie_data():
     """Loads movie data from the CSV file."""
     return pd.read_csv('data/movies.csv')
 
-@st.cache_data
+@st.cache_data 
 def get_movie_embedding(title: str, genre: str):
     """Generates an embedding for a movie using the Gemini API."""
     embedding_model = 'text-embedding-004'
