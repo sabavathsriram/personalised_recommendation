@@ -228,23 +228,34 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+import google.generativeai as genai
 from sklearn.metrics.pairwise import cosine_similarity
 
 # --- CONFIGURATION & DATA LOADING ---
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
 @st.cache_data
 def load_data():
-    """Loads the movie embeddings from the Parquet file."""
-    df = pd.read_parquet("data/movie_embeddings.parquet")
-    return df
+    """
+    Loads both the movie data and embeddings, merging them intelligently.
+    """
+    # Load the original movie data but ONLY keep the columns we need: 'movieId' and 'genres'
+    movies_df = pd.read_csv("data/movies.csv")[['movieId', 'genres']]
+    
+    # Load the movie embeddings (which already has movieId and title)
+    embeddings_df = pd.read_parquet("data/movie_embeddings.parquet")
+    
+    # Merge the two dataframes using the 'movieId' column
+    # This now works perfectly because there's no duplicate 'title' column to cause a conflict
+    merged_df = pd.merge(embeddings_df, movies_df, on='movieId', how='inner')
+    
+    return merged_df
 
 # --- RECOMMENDATION LOGIC ---
 
-# We add our chat model here to use it in both functions
 chat_model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 @st.cache_data
@@ -253,17 +264,18 @@ def get_recommendations(title: str, df: pd.DataFrame, top_n: int = 5):
     try:
         query_embedding = df[df['title'] == title]['embedding'].iloc[0]
     except IndexError:
-        return ["Movie not found. Please select another."]
+        return pd.DataFrame() # Return an empty DataFrame on error
 
     query_embedding = np.array(query_embedding).reshape(1, -1)
     all_embeddings = np.stack(df['embedding'].values)
     similarities = cosine_similarity(query_embedding, all_embeddings).flatten()
     top_indices = np.argsort(similarities)[::-1][1:top_n+1]
-    recommended_titles = df.iloc[top_indices]['title'].tolist()
     
-    return recommended_titles
+    # --- THIS IS THE FIX ---
+    # Return the full DataFrame for the recommended movies
+    recommended_movies = df.iloc[top_indices]
+    return recommended_movies
 
-# --- NEW: EXPLAINABLE AI FUNCTION ---
 def get_recommendation_explanation(original_movie: str, recommended_movie: str):
     """Generates a brief explanation for why a movie is recommended."""
     prompt = f"""
@@ -300,18 +312,18 @@ def main():
                 
                 st.subheader(f"Movies similar to '{selected_movie}':")
                 
-                if recommendations and "Movie not found" not in recommendations[0]:
-                    # --- NEW: Get and display the explanation for the top recommendation ---
-                    top_recommendation = recommendations[0]
-                    explanation = get_recommendation_explanation(selected_movie, top_recommendation)
-                    st.info(explanation) # Display explanation in a blue info box
+                if not recommendations.empty:
+                    top_recommendation_title = recommendations.iloc[0]['title']
+                    explanation = get_recommendation_explanation(selected_movie, top_recommendation_title)
+                    st.info(explanation)
 
-                    # Display the rest of the recommendations
-                    for movie_title in recommendations:
-                        st.success(movie_title)
+                    for index, row in recommendations.iterrows():
+                        st.success(f"**{row['title']}** - *{row['genres']}*")
                 else:
-                    st.error(recommendations[0])
+                    st.error("Movie not found. Please select another.")
 
 # --- SCRIPT EXECUTION ---
 if __name__ == "__main__":
     main()
+
+
