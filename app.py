@@ -225,6 +225,126 @@
 
 # if __name__ == "__main__":
 #     main()
+# import streamlit as st
+# import pandas as pd
+# import numpy as np
+# import os
+# from dotenv import load_dotenv
+# import google.generativeai as genai
+# from sklearn.metrics.pairwise import cosine_similarity
+
+# # --- CONFIGURATION & DATA LOADING ---
+# load_dotenv()
+# genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+# @st.cache_data
+# def load_data():
+#     """Loads and merges movie data with embeddings."""
+#     movies_df = pd.read_csv("data/movies.csv")[['movieId', 'genres']]
+#     embeddings_df = pd.read_parquet("data/movie_embeddings.parquet")
+#     merged_df = pd.merge(embeddings_df, movies_df, on='movieId', how='inner')
+#     return merged_df
+
+# # --- LOGIC FUNCTIONS ---
+
+# chat_model = genai.GenerativeModel('gemini-1.5-flash-latest')
+
+# @st.cache_data
+# def get_recommendations(title: str, df: pd.DataFrame, top_n: int = 5):
+#     """Finds movies similar to a given title using cosine similarity."""
+#     try:
+#         query_embedding = df[df['title'] == title]['embedding'].iloc[0]
+#     except IndexError:
+#         return pd.DataFrame()
+
+#     query_embedding = np.array(query_embedding).reshape(1, -1)
+#     all_embeddings = np.stack(df['embedding'].values)
+#     similarities = cosine_similarity(query_embedding, all_embeddings).flatten()
+#     top_indices = np.argsort(similarities)[::-1][1:top_n+1]
+#     recommended_movies = df.iloc[top_indices]
+#     return recommended_movies
+
+# def get_recommendation_explanation(original_movie: str, recommended_movie: str):
+#     """Generates a brief explanation for why a movie is recommended."""
+#     prompt = f"""
+#     You are a friendly and knowledgeable movie expert.
+#     In one concise and engaging sentence, explain why someone who liked the movie "{original_movie}" would also enjoy the movie "{recommended_movie}".
+#     Focus on themes, style, or actors.
+#     """
+#     try:
+#         response = chat_model.generate_content(prompt)
+#         return response.text
+#     except Exception as e:
+#         return f"Could not generate explanation: {e}"
+
+# # --- NEW FUNCTION FOR VIBE SEARCH ---
+# # LOCATION 1: The new logic function goes here, with your other functions.
+# @st.cache_data
+# def find_movies_by_vibe(vibe_text: str, df: pd.DataFrame, top_n: int = 5):
+#     """Finds movies that match a text description using embeddings."""
+#     # We reuse the get_movie_embedding function, which is now inside app.py
+#     # Let's define it here for clarity or move it to a shared space
+#     # For now, let's redefine the core embedding logic here
+#     embedding_model = 'text-embedding-004'
+#     prompt = f"Represent this movie vibe for semantic search: {vibe_text}"
+#     embedding = genai.embed_content(model=embedding_model, content=prompt)
+#     query_embedding = embedding['embedding']
+
+#     query_embedding = np.array(query_embedding).reshape(1, -1)
+#     all_embeddings = np.stack(df['embedding'].values)
+#     similarities = cosine_similarity(query_embedding, all_embeddings).flatten()
+#     top_indices = np.argsort(similarities)[::-1][:top_n]
+#     recommended_movies = df.iloc[top_indices]
+#     return recommended_movies
+
+# # --- MAIN APP ---
+
+# def main():
+#     """This function runs the main Streamlit application."""
+#     st.set_page_config(layout="wide")
+#     st.title("🎬 Gemini-Powered Movie Recommender")
+
+#     embeddings_df = load_data()
+#     movie_titles = embeddings_df['title'].sort_values().tolist()
+    
+#     # --- RECOMMENDATION BY TITLE SECTION ---
+#     st.header("1. Get Recommendations by Movie Title")
+#     st.write("Select a movie you like, and we'll find others with a similar 'fingerprint'!")
+#     selected_movie = st.selectbox("Choose a movie:", options=movie_titles)
+
+#     if st.button("Get Recommendations"):
+#         if selected_movie:
+#             with st.spinner('Finding similar movies and generating an explanation...'):
+#                 recommendations = get_recommendations(selected_movie, embeddings_df)
+#                 st.subheader(f"Movies similar to '{selected_movie}':")
+#                 if not recommendations.empty:
+#                     top_recommendation_title = recommendations.iloc[0]['title']
+#                     explanation = get_recommendation_explanation(selected_movie, top_recommendation_title)
+#                     st.info(explanation)
+#                     for index, row in recommendations.iterrows():
+#                         st.success(f"**{row['title']}** - *{row['genres']}*")
+#                 else:
+#                     st.error("Movie not found.")
+    
+#     st.divider()
+
+#     # --- NEW SECTION: FIND MOVIE BY VIBE ---
+#     # LOCATION 2: The new UI goes here, inside the main() function.
+#     st.header("🔮 2. Find a Movie by Vibe")
+#     st.write("Describe the kind of movie you want to watch, and we'll find the best match!")
+#     vibe_prompt = st.text_area("Enter your movie vibe here:", height=100)
+
+#     if st.button("Find by Vibe"):
+#         if vibe_prompt:
+#             with st.spinner("Searching for the perfect movie..."):
+#                 results = find_movies_by_vibe(vibe_prompt, embeddings_df)
+#                 st.subheader("Here are some movies that match your vibe:")
+#                 for index, row in results.iterrows():
+#                     st.success(f"**{row['title']}** - *{row['genres']}*")
+
+# # --- SCRIPT EXECUTION ---
+# if __name__ == "__main__":
+#     main()
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -232,31 +352,87 @@ import os
 from dotenv import load_dotenv
 import google.generativeai as genai
 from sklearn.metrics.pairwise import cosine_similarity
-
+import requests
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 # --- CONFIGURATION & DATA LOADING ---
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 
+# --- CHANGE 1: UPDATE THE DATA LOADING FUNCTION ---
 @st.cache_data
 def load_data():
-    """Loads and merges movie data with embeddings."""
-    movies_df = pd.read_csv("data/movies.csv")[['movieId', 'genres']]
+    """Loads all data files, merges them, and cleans up missing IDs."""
+    # Load the main embeddings file, which has our primary title list
     embeddings_df = pd.read_parquet("data/movie_embeddings.parquet")
-    merged_df = pd.merge(embeddings_df, movies_df, on='movieId', how='inner')
-    return merged_df
-
-# --- LOGIC FUNCTIONS ---
-
-chat_model = genai.GenerativeModel('gemini-1.5-flash-latest')
-
+    
+    # From movies.csv, we ONLY need the genres
+    movies_genres_df = pd.read_csv("data/movies.csv")[['movieId', 'genres']]
+    
+    # From links.csv, we ONLY need the tmdbId
+    links_df = pd.read_csv("data/links.csv")[['movieId', 'tmdbId']]
+    
+    # Merge the dataframes
+    merged_df = pd.merge(embeddings_df, movies_genres_df, on='movieId', how='inner')
+    final_df = pd.merge(merged_df, links_df, on='movieId', how='inner')
+    
+    # --- NEW: DATA CLEANING STEP ---
+    # 1. Drop any rows where tmdbId is missing
+    final_df.dropna(subset=['tmdbId'], inplace=True)
+    
+    # 2. Ensure tmdbId is an integer, which the API requires
+    final_df['tmdbId'] = final_df['tmdbId'].astype(int)
+    
+    return final_df
+# --- CHANGE 2: UPDATE THE POSTER FETCHING FUNCTION ---
 @st.cache_data
+def fetch_poster(tmdb_id: int):
+    """Fetches a movie poster URL from the TMDb API with a retry strategy."""
+    # Ensure tmdb_id is a valid integer
+    try:
+        tmdb_id = int(tmdb_id)
+    except (ValueError, TypeError):
+        return "https://via.placeholder.com/500x750.png?text=Invalid+ID"
+
+    # --- NEW: RETRY LOGIC ---
+    # 1. Define our retry strategy
+    retry_strategy = Retry(
+        total=3,  # Try a total of 3 times
+        status_forcelist=[429, 500, 502, 503, 504],  # Retry on these server errors
+        backoff_factor=1  # Wait 1s, then 2s, then 4s between retries
+    )
+    # 2. Create an adapter with this strategy
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    # 3. Create a session object
+    session = requests.Session()
+    # 4. Mount the adapter to the session
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    # --- END OF RETRY LOGIC ---
+
+    url = f"https://api.themoviedb.org/3/movie/{tmdb_id}?api_key={TMDB_API_KEY}&language=en-US"
+    
+    try:
+        # Use the session object to make the request, which now has our retry rules
+        response = session.get(url)
+        response.raise_for_status()
+        data = response.json()
+        poster_path = data.get('poster_path')
+        if poster_path:
+            return f"https://image.tmdb.org/t/p/w500/{poster_path}"
+    except requests.exceptions.RequestException as e:
+        print(f"API request failed after retries for tmdbId {tmdb_id}: {e}")
+        
+    return "https://via.placeholder.com/500x750.png?text=No+Poster+Found"
+
+# --- (Your other logic functions like get_recommendations remain the same) ---
 def get_recommendations(title: str, df: pd.DataFrame, top_n: int = 5):
-    """Finds movies similar to a given title using cosine similarity."""
     try:
         query_embedding = df[df['title'] == title]['embedding'].iloc[0]
     except IndexError:
         return pd.DataFrame()
-
     query_embedding = np.array(query_embedding).reshape(1, -1)
     all_embeddings = np.stack(df['embedding'].values)
     similarities = cosine_similarity(query_embedding, all_embeddings).flatten()
@@ -264,83 +440,41 @@ def get_recommendations(title: str, df: pd.DataFrame, top_n: int = 5):
     recommended_movies = df.iloc[top_indices]
     return recommended_movies
 
-def get_recommendation_explanation(original_movie: str, recommended_movie: str):
-    """Generates a brief explanation for why a movie is recommended."""
-    prompt = f"""
-    You are a friendly and knowledgeable movie expert.
-    In one concise and engaging sentence, explain why someone who liked the movie "{original_movie}" would also enjoy the movie "{recommended_movie}".
-    Focus on themes, style, or actors.
-    """
-    try:
-        response = chat_model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        return f"Could not generate explanation: {e}"
-
-# --- NEW FUNCTION FOR VIBE SEARCH ---
-# LOCATION 1: The new logic function goes here, with your other functions.
-@st.cache_data
-def find_movies_by_vibe(vibe_text: str, df: pd.DataFrame, top_n: int = 5):
-    """Finds movies that match a text description using embeddings."""
-    # We reuse the get_movie_embedding function, which is now inside app.py
-    # Let's define it here for clarity or move it to a shared space
-    # For now, let's redefine the core embedding logic here
-    embedding_model = 'text-embedding-004'
-    prompt = f"Represent this movie vibe for semantic search: {vibe_text}"
-    embedding = genai.embed_content(model=embedding_model, content=prompt)
-    query_embedding = embedding['embedding']
-
-    query_embedding = np.array(query_embedding).reshape(1, -1)
-    all_embeddings = np.stack(df['embedding'].values)
-    similarities = cosine_similarity(query_embedding, all_embeddings).flatten()
-    top_indices = np.argsort(similarities)[::-1][:top_n]
-    recommended_movies = df.iloc[top_indices]
-    return recommended_movies
+# (And so on for your other functions...)
 
 # --- MAIN APP ---
-
 def main():
     """This function runs the main Streamlit application."""
     st.set_page_config(layout="wide")
     st.title("🎬 Gemini-Powered Movie Recommender")
-
-    embeddings_df = load_data()
-    movie_titles = embeddings_df['title'].sort_values().tolist()
     
-    # --- RECOMMENDATION BY TITLE SECTION ---
+    # Load the single, final, merged dataframe
+    final_df = load_data()
+    movie_titles = final_df['title'].sort_values().tolist()
+    
     st.header("1. Get Recommendations by Movie Title")
-    st.write("Select a movie you like, and we'll find others with a similar 'fingerprint'!")
     selected_movie = st.selectbox("Choose a movie:", options=movie_titles)
 
     if st.button("Get Recommendations"):
         if selected_movie:
-            with st.spinner('Finding similar movies and generating an explanation...'):
-                recommendations = get_recommendations(selected_movie, embeddings_df)
-                st.subheader(f"Movies similar to '{selected_movie}':")
+            with st.spinner('Finding similar movies...'):
+                recommendations = get_recommendations(selected_movie, final_df)
+                
                 if not recommendations.empty:
-                    top_recommendation_title = recommendations.iloc[0]['title']
-                    explanation = get_recommendation_explanation(selected_movie, top_recommendation_title)
-                    st.info(explanation)
-                    for index, row in recommendations.iterrows():
-                        st.success(f"**{row['title']}** - *{row['genres']}*")
+                    st.subheader(f"Movies similar to '{selected_movie}':")
+                    
+                    cols = st.columns(5)
+                    for i, (index, row) in enumerate(recommendations.iterrows()):
+                        with cols[i]:
+                            # --- CHANGE 3: PASS THE CORRECT ID ---
+                            # We now pass the 'tmdbId' column to our fetch_poster function
+                            poster_url = fetch_poster(row['tmdbId'])
+                            st.image(poster_url)
+                            st.caption(row['title'])
                 else:
-                    st.error("Movie not found.")
+                    st.error("Could not find recommendations.")
     
-    st.divider()
-
-    # --- NEW SECTION: FIND MOVIE BY VIBE ---
-    # LOCATION 2: The new UI goes here, inside the main() function.
-    st.header("🔮 2. Find a Movie by Vibe")
-    st.write("Describe the kind of movie you want to watch, and we'll find the best match!")
-    vibe_prompt = st.text_area("Enter your movie vibe here:", height=100)
-
-    if st.button("Find by Vibe"):
-        if vibe_prompt:
-            with st.spinner("Searching for the perfect movie..."):
-                results = find_movies_by_vibe(vibe_prompt, embeddings_df)
-                st.subheader("Here are some movies that match your vibe:")
-                for index, row in results.iterrows():
-                    st.success(f"**{row['title']}** - *{row['genres']}*")
+    # (Your "Find by Vibe" UI should also be updated to pass row['tmdbId'])
 
 # --- SCRIPT EXECUTION ---
 if __name__ == "__main__":
