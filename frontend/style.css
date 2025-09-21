@@ -1,0 +1,81 @@
+/* Basic dark theme and font setup */
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+/* Centered container for our content */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+h1 {
+    color: #bb86fc; /* A nice purple accent */
+}
+
+/* Styling for our input sections */
+.recommender-section {
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+select, button {
+    font-size: 16px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #333;
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+}
+
+button {
+    cursor: pointer;
+    background-color: #03dac6; /* A teal accent for buttons */
+    color: #121212;
+    font-weight: bold;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+/* This will be the grid for our movie posters */
+#results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+/* Styling for the container of each movie poster and title */
+.movie-card {
+    background-color: #2c2c2c;
+    border-radius: 8px;
+    overflow: hidden; /* Ensures the image corners are rounded with the card */
+    text-align: center;
+    padding-bottom: 10px;
+}
+
+/* Make sure images fit inside their card without stretching */
+.movie-card img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Styling for the movie title under the poster */
+.movie-card p {
+    padding: 10px 5px 0 5px; /* Add some space around the text */
+    margin: 0;
+    font-size: 14px;
+    min-height: 40px; /* Give titles some space so cards align */
+}
