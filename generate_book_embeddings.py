@@ -17,7 +17,6 @@ CHECKPOINT_INTERVAL = 50  # Save progress every 50 books
 def get_book_embedding(title: str, author: str):
     """Generates an embedding for a book using its title and author."""
     embedding_model = 'text-embedding-004'
-    # Create a prompt tailored for books
     prompt = f"Title: {title}\nAuthor(s): {author}"
     try:
         embedding = genai.embed_content(model=embedding_model, content=prompt)
@@ -28,10 +27,17 @@ def get_book_embedding(title: str, author: str):
 
 # --- MAIN SCRIPT LOGIC ---
 def main():
-    """Generates and saves embeddings for all books, with checkpointing."""
+    """Generates and saves embeddings for all books, with checkpointing and robust data cleaning."""
     print(f"Loading book data from '{INPUT_FILE}'...")
-    # Note: We specify error_bad_lines=False for this specific messy CSV
     book_df = pd.read_csv(INPUT_FILE, on_bad_lines='skip')
+
+    # --- NEW: ROBUST DATA CLEANING ---
+    # Drop rows where essential information is missing to prevent errors
+    original_rows = len(book_df)
+    book_df.dropna(subset=['bookID', 'title', 'authors', 'isbn'], inplace=True)
+    cleaned_rows = len(book_df)
+    print(f"Data cleaning complete. Removed {original_rows - cleaned_rows} rows with missing essential data.")
+    # --- END OF NEW CODE ---
 
     processed_book_ids = set()
     embeddings_df = pd.DataFrame()
@@ -39,12 +45,9 @@ def main():
     if os.path.exists(OUTPUT_FILE):
         print(f"Found existing embeddings file. Loading progress from '{OUTPUT_FILE}'...")
         embeddings_df = pd.read_parquet(OUTPUT_FILE)
-        # Assuming the book CSV has a column like 'bookID' or we can use index
-        # Let's use 'bookID' for this example
         processed_book_ids = set(embeddings_df['bookID'].tolist())
         print(f"Loaded {len(processed_book_ids)} existing embeddings.")
     
-    # Filter out books that have already been processed
     unprocessed_books_df = book_df[~book_df['bookID'].isin(processed_book_ids)]
 
     if unprocessed_books_df.empty:
@@ -56,21 +59,22 @@ def main():
     new_embeddings_list = []
     
     for i, (index, row) in enumerate(tqdm(unprocessed_books_df.iterrows(), total=unprocessed_books_df.shape[0], desc="Processing Books")):
-        # Get the title and authors from the row
-        book_title = row['title']
-        book_authors = row['authors']
+        # NEW: Ensure title and authors are strings to prevent errors
+        book_title = str(row['title'])
+        book_authors = str(row['authors'])
         
         embedding = get_book_embedding(book_title, book_authors)
         
         if embedding:
             new_embeddings_list.append({
-                'bookID': row['bookID'], # Make sure your CSV has this column name
+                'bookID': row['bookID'],
                 'title': book_title,
                 'authors': book_authors,
+                'isbn': row['isbn'],
                 'embedding': embedding
             })
         
-        time.sleep(1) # Respect API rate limits
+        time.sleep(1)
 
         # Checkpointing logic
         if (i + 1) % CHECKPOINT_INTERVAL == 0 and new_embeddings_list:
@@ -82,7 +86,7 @@ def main():
             embeddings_df = combined_df
             new_embeddings_list = []
 
-    # Final save for any remaining books
+    # Final save
     if new_embeddings_list:
         print("\nSaving final batch of embeddings...")
         final_new_df = pd.DataFrame(new_embeddings_list)
