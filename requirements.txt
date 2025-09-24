@@ -6,3 +6,5 @@ streamlit
 python-dotenv
 tqdm
 flask
+pymongo
+passlib
