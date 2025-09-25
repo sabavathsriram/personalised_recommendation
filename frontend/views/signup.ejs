@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up for nxtpick</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Keep all your CSS same as before */
+    :root {
+      --deep-purple: #5B21B6;
+      --vibrant-purple: #8B5CF6;
+      --electric-blue: #3B82F6;
+      --bright-cyan: #06B6D4;
+
+      --bg-primary: #0F172A;
+      --bg-secondary: #1E293B;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+
+      --gradient: linear-gradient(135deg, var(--deep-purple) 0%, var(--vibrant-purple) 50%, var(--electric-blue) 100%);
+      --accent-gradient: linear-gradient(135deg, var(--vibrant-purple) 0%, var(--bright-cyan) 100%);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:"Inter", sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height:100vh; display:flex; justify-content:center; align-items:center; }
+    .signup-container { display:flex; width:100%; max-width:1300px; min-height:90vh; border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+    .signup-form-container { flex:1; background:var(--bg-primary); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem; }
+    .logo-text { font-family:"Space Grotesk", sans-serif; font-size:2.5rem; font-weight:800; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:0.5rem; }
+    .tagline { font-size:1.1rem; color:var(--text-secondary); margin-bottom:2rem; }
+    .signup-card { width:100%; max-width:480px; background:rgba(30,41,59,0.9); padding:2.5rem; border-radius:16px; backdrop-filter:blur(15px); border:1px solid rgba(139,92,246,0.3); }
+    .card-header { text-align:center; margin-bottom:2rem; }
+    .card-header h2 { font-size:2.2rem; font-weight:800; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .subtitle { color:var(--text-secondary); font-size:1rem; }
+    .form-row { margin-bottom:1.5rem; }
+    .input-container { position:relative; }
+    .input-container i { position:absolute; top:50%; left:1rem; transform:translateY(-50%); color:#94A3B8; }
+    .input-container input { width:100%; padding:1rem 1rem 1rem 2.8rem; border-radius:10px; border:1px solid rgba(139,92,246,0.3); background:var(--bg-secondary); color:white; font-size:1rem; }
+    .input-container input:focus { outline:none; border-color:var(--vibrant-purple); box-shadow:0 0 0 3px rgba(139,92,246,0.2); }
+    .toggle-password { position:absolute; top:50%; right:1rem; transform:translateY(-50%); border:none; background:none; color:#94A3B8; cursor:pointer; }
+    .signup-button { width:100%; padding:1rem; font-size:1.1rem; font-weight:700; border:none; border-radius:10px; background:var(--gradient); color:white; cursor:pointer; margin-top:0.5rem; }
+    .signup-button:hover { opacity:0.9; }
+    .divider { display:flex; align-items:center; margin:1.5rem 0; color:#94A3B8; }
+    .divider::before, .divider::after { content:""; flex:1; height:1px; background:rgba(139,92,246,0.3); }
+    .divider span { padding:0 1rem; }
+    .social-signup { display:flex; justify-content:center; gap:1rem; margin-bottom:1rem; }
+    .social-button { width:45px; height:45px; border-radius:50%; background:var(--bg-secondary); border:1px solid rgba(139,92,246,0.3); color:white; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .login-link { text-align:center; font-size:0.95rem; color:var(--text-secondary); }
+    .login-link a { color:var(--vibrant-purple); text-decoration:none; font-weight:600; }
+    .signup-image-container { flex:1; background: linear-gradient(135deg, rgba(91,33,182,0.85), rgba(59,130,246,0.85)), url("movieposter.png") center/cover no-repeat; display:flex; align-items:center; justify-content:center; padding:3rem; color:white; }
+    .signup-content { max-width:500px; text-align:center; }
+    .signup-content h1 { font-size:2.5rem; font-weight:800; margin-bottom:1rem; }
+    .signup-content p { font-size:1.1rem; margin-bottom:2rem; color:rgba(255,255,255,0.9); }
+    .benefits { display:flex; flex-direction:column; gap:1.5rem; text-align:left; }
+    .benefit { display:flex; align-items:center; gap:1rem; }
+    .benefit-icon { width:50px; height:50px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; }
+    .benefit-icon i { font-size:1.2rem; }
+    @media (max-width:900px) { .signup-container { flex-direction:column; max-width:95%; } .signup-image-container { display:none; } .signup-form-container { padding:2rem; } }
+  </style>
+</head>
+<body>
+  <div class="signup-container">
+    <!-- Left side form -->
+    <div class="signup-form-container">
+      <span class="logo-text">nxtpick</span>
+      <p class="tagline">Discover Your Next Favorite</p>
+
+      <div class="signup-card">
+        <div class="card-header">
+          <h2>Create Account</h2>
+          <p class="subtitle">Join nxtpick to get personalized recommendations</p>
+        </div>
+
+        <!-- Form -->
+        <form action="/signup" method="POST">
+          <div class="form-row">
+            <div class="input-container">
+              <i class="fas fa-user"></i>
+              <input type="text" name="username" placeholder="Full Name" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="input-container">
+              <i class="fas fa-envelope"></i>
+              <input type="email" name="email" placeholder="Email Address" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="input-container">
+              <i class="fas fa-lock"></i>
+              <input type="password" name="password" placeholder="Password" required>
+              <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="input-container">
+              <i class="fas fa-lock"></i>
+              <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
+              <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label style="display:flex; align-items:center; gap:0.5rem;">
+              <input type="checkbox" name="termsAccepted" value="true" required>
+              I agree to the <a href="#" style="color:var(--vibrant-purple); text-decoration:underline;">terms and conditions</a>
+            </label>
+          </div>
+
+          <button type="submit" class="signup-button">Create Account</button>
+        </form>
+
+        <div class="divider"><span>or continue with</span></div>
+
+        <div class="social-signup">
+          <button class="social-button"><i class="fab fa-google"></i></button>
+          <button class="social-button"><i class="fab fa-facebook-f"></i></button>
+          <button class="social-button"><i class="fab fa-apple"></i></button>
+        </div>
+
+        <p class="login-link">Already have an account? <a href="/signin">Sign in</a></p>
+      </div>
+    </div>
+
+    <!-- Right side image -->
+    <div class="signup-image-container">
+      <div class="signup-content">
+        <h1>Join the Future of Personalized Recommendations</h1>
+        <p>Create your nxtpick account today and unlock a world of content curated just for you by our advanced AI technology.</p>
+        <div class="benefits">
+          <div class="benefit">
+            <div class="benefit-icon"><i class="fas fa-brain"></i></div>
+            <span>AI-Powered recommendations</span>
+          </div>
+          <div class="benefit">
+            <div class="benefit-icon"><i class="fas fa-globe"></i></div>
+            <span>Cross-Domain discovery</span>
+          </div>
+          <div class="benefit">
+            <div class="benefit-icon"><i class="fas fa-shield-alt"></i></div>
+            <span>Privacy First</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Toggle password visibility
+    const toggleButtons = document.querySelectorAll('.toggle-password');
+    toggleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = btn.previousElementSibling;
+        if(input.type === 'password') input.type = 'text';
+        else input.type = 'password';
+      });
+    });
+  </script>
+</body>
+</html>

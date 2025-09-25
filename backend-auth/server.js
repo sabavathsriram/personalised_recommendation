@@ -1,25 +1,32 @@
-// Load environment variables from a .env file
-require('dotenv').config();
-
 const express = require('express');
-const cors = require('cors');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const cookieParser = require('cookie-parser');
+const path = require('path');
+const userRoutes = require('./router/user');
 
-// Create the Express app
+dotenv.config();
+
 const app = express();
+const PORT = process.env.PORT || 8080;
+const MONGODB_URI = process.env.MONGODB_URL || 'mongodb://localhost:27017/movie-recommender';
 
 // Middleware
-app.use(cors()); // Allow cross-origin requests
-app.use(express.json()); // Allow the server to accept JSON data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../frontend/views'));
 
-// Define a simple root route
-app.get('/', (req, res) => {
-    res.json({ message: "Welcome to the Auth API!" });
-});
+// Routes
+app.use('/', userRoutes);
 
-// Define the port to run on
-const PORT = process.env.PORT || 8081; // We'll use a different port
+// MongoDB Connection
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// Start the server
+// Start Server
 app.listen(PORT, () => {
-    console.log(`Auth server is running on port ${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

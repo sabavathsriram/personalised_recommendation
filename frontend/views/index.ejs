@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nxtpick - AI-Powered Personalized Recommendations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<style>
+    :root {
+    /* Optimized color palette for AI recommendation system */
+    --deep-purple: #5B21B6;    /* Represents intelligence and innovation */
+    --vibrant-purple: #8B5CF6; /* Represents creativity and personalization */
+    --electric-blue: #3B82F6;  /* Represents technology and trust */
+    --bright-cyan: #06B6D4;    /* Represents discovery and excitement */
+    
+    /* Background colors */
+    --bg-primary: #0F172A;      /* Dark blue-gray base for modern tech feel */
+    --bg-secondary: #1E293B;    /* Slightly lighter for layering */
+    --bg-card: #334155;         /* Card backgrounds with depth */
+    --bg-hover: #475569;        /* Hover states */
+    
+    /* Text colors */
+    --text-primary: #F8FAFC;    /* Clean white for readability */
+    --text-secondary: #CBD5E1;   /* Soft gray for secondary text */
+    --text-tertiary: #94A3B8;    /* Muted gray for tertiary elements */
+    
+    /* Accent colors */
+    --accent: var(--vibrant-purple); /* Primary accent for CTAs and highlights */
+    --accent-hover: var(--bright-cyan); /* Hover state for interactivity */
+    --success: #10B981;          /* Success state (green) */
+    --danger: #EF4444;           /* Danger/error state (red) */
+    
+    /* Gradients */
+    --gradient: linear-gradient(135deg, var(--deep-purple) 0%, var(--vibrant-purple) 50%, var(--electric-blue) 100%);
+    --accent-gradient: linear-gradient(135deg, var(--vibrant-purple) 0%, var(--bright-cyan) 100%);
+    --card-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(91, 33, 182, 0.15) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 20%);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--vibrant-purple);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--bright-cyan);
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Header */
+header {
+    background-color: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    background:;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    position: relative;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--vibrant-purple);
+    transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--text-primary);
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.notification-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.notification-btn:hover {
+    background: var(--bg-hover);
+    color: var(--vibrant-purple);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    background: var(--bright-cyan);
+    border-radius: 50%;
+}
+
+.user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.user-avatar:hover {
+    transform: scale(1.1);
+}
+
+/* Hero Section */
+.hero {
+    margin-top: 80px;
+    padding: 4rem 0 3rem;
+    background: radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+}
+
+.hero-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--vibrant-purple);
+    margin-bottom: 1.5rem;
+}
+
+.hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.2;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.8;
+}
+
+/* Category Tabs */
+.category-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+}
+
+.category-tab {
+    padding: 12px 24px;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.category-tab:hover {
+    transform: translateY(-2px);
+    border-color: rgba(139, 92, 246, 0.5);
+}
+
+.category-tab.active {
+    background: var(--gradient);
+    border-color: transparent;
+    color: white;
+}
+
+.category-tab span {
+    position: relative;
+    z-index: 1;
+}
+
+/* Main Content */
+.main-content {
+    padding: 2rem 0 4rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-title i {
+    color: var(--vibrant-purple);
+}
+
+.view-all-btn {
+    color: var(--vibrant-purple);
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: gap 0.3s ease;
+}
+
+.view-all-btn:hover {
+    gap: 12px;
+}
+
+/* Recommendations Grid */
+.recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 4rem;
+}
+
+/* Recommendation Card */
+.recommendation-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    position: relative;
+    border: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.recommendation-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--card-shadow);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.card-image-container {
+    position: relative;
+    height: 280px; /* Increased from 200px to 280px */
+    overflow: hidden;
+}
+
+.card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.recommendation-card:hover .card-image {
+    transform: scale(1.1);
+}
+
+.card-gradient-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%; /* Adjusted to maintain proportion with larger image */
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+}
+
+.card-category-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(91, 33, 182, 0.7);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card-rating {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.card-rating i {
+    color: #fbbf24;
+}
+
+.card-content {
+    padding: 20px; /* Reduced from 24px to accommodate larger image */
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+}
+
+.card-description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Reduced from 3 to 2 to save space */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.6;
+}
+
+.card-explanation {
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    padding: 12px; /* Reduced from 16px */
+    margin-bottom: 16px; /* Reduced from 20px */
+    position: relative;
+}
+
+.explanation-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px; /* Reduced from 8px */
+    color: var(--vibrant-purple);
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.explanation-text {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.card-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 10px; /* Reduced from 12px */
+    border: none;
+    border-radius: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.like-btn {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.like-btn:hover {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.like-btn.liked {
+    background: var(--success);
+    color: white;
+}
+
+.dislike-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.dislike-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.dislike-btn.disliked {
+    background: var(--danger);
+    color: white;
+}
+
+/* Loading Skeleton */
+.skeleton {
+    background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.skeleton-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+.skeleton-image {
+    height: 280px; /* Match the increased image height */
+    width: 100%;
+}
+
+.skeleton-content {
+    padding: 20px; /* Match the reduced content padding */
+}
+
+.skeleton-title {
+    height: 24px;
+    width: 70%;
+    margin-bottom: 12px;
+    border-radius: 4px;
+}
+
+.skeleton-text {
+    height: 16px;
+    width: 100%;
+    margin-bottom: 8px;
+    border-radius: 4px;
+}
+
+.skeleton-text:last-child {
+    width: 80%;
+}
+
+/* Footer */
+footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    padding: 3rem 0;
+    margin-top: 4rem;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-section h3 {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.footer-links {
+    list-style: none;
+}
+
+.footer-links li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: var(--vibrant-purple);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    color: var(--text-tertiary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero p {
+        font-size: 1.125rem;
+    }
+
+    .recommendations-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-menu {
+        display: none;
+    }
+    
+    /* Adjust card image height for mobile */
+    .card-image-container {
+        height: 240px;
+    }
+    
+    .skeleton-image {
+        height: 240px;
+    }
+}
+</style>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-compass"></i>
+                    </div>
+                    <span>NxtPick</span>
+                </div>
+                <nav class="nav-menu">
+                    <a href="#" class="nav-link">Discover</a>
+                    <a href="#" class="nav-link">Library</a>
+                    <a href="#" class="nav-link">Trending</a>
+                    <a href="#" class="nav-link">For You</a>
+                    <a href="/profile" class="nav-link">Profile</a>
+                </nav>
+                <div class="user-menu">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge"></span>
+                    </button>
+                    <div class="user-avatar"><i class="fas fa-user"></i></div> <!-- Can customize with <%= user.username.charAt(0) %> -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-sparkles"></i>
+                    <span>Welcome to Nxtpick, <%= user.username %></span>
+                </div>
+                <h1>Discover Your Next Favorite</h1>
+                <p>Experience personalized recommendations that evolve with your tastes. Our AI learns from your interactions to bring you movies, books, and music you'll love.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="category-tabs container">
+        <div class="category-tab active" data-category="all">
+            <span><i class="fas fa-th-large"></i> All</span>
+        </div>
+        <div class="category-tab" data-category="movies">
+            <span><i class="fas fa-film"></i> Movies</span>
+        </div>
+        <div class="category-tab" data-category="books">
+            <span><i class="fas fa-book"></i> Books</span>
+        </div>
+        <div class="category-tab" data-category="music">
+            <span><i class="fas fa-music"></i> Music</span>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-magic"></i>
+                    Recommended For You
+                </h2>
+                <a href="#" class="view-all-btn">
+                    View All <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <div id="recommendations-container">
+                <!-- Loading Skeletons -->
+                <div class="recommendations-grid">
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="explanation-container" style="display: none; margin-top: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 12px;">
+                <!-- Explanation will be inserted here -->
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <!-- (Footer remains unchanged) -->
+    </footer>
+
+    <script>
+        const userId = '<%= user._id %>';
+        const explanationContainer = document.getElementById('explanation-container');
+
+        // Enhanced mock data for music (since no music endpoint in FastAPI)
+        const mockMusicRecommendations = [
+            { track_name: "Bohemian Rhapsody", artist_name: "Queen", coverUrl: "https://via.placeholder.com/500x500.png?text=Queen", category: "music" },
+            // Add more if needed
+        ];
+
+        // DOM elements
+        const recommendationsContainer = document.getElementById('recommendations-container');
+        const categoryTabs = document.querySelectorAll('.category-tab');
+
+        // Current filter
+        let currentFilter = 'all';
+
+        // Initialize the app
+        async function init() {
+            showLoadingState();
+            // Load recommendations immediately on page load
+            await renderRecommendations();
+            // Add event listeners to category tabs
+            categoryTabs.forEach(tab => {
+                tab.addEventListener('click', async () => {
+                    // Update active tab
+                    categoryTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update filter
+                    currentFilter = tab.dataset.category;
+                    
+                    // Show loading state
+                    showLoadingState();
+                    
+                    // Load new recommendations
+                    await renderRecommendations();
+                });
+            });
+
+            // Add handler for notification button
+            document.querySelector('.notification-btn').addEventListener('click', () => {
+                alert('No new notifications at the moment.');
+            });
+
+            // Add handler for user avatar to go to profile
+            document.querySelector('.user-avatar').addEventListener('click', () => {
+                window.location.href = '/profile';
+            });
+
+            // Add handler for view all button
+            document.querySelector('.view-all-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('View all feature coming soon!');
+            });
+
+            // Optional: Add placeholders for nav links
+            document.querySelectorAll('.nav-link:not([href="/profile"])').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert(`${link.textContent} feature coming soon!`);
+                });
+            });
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            recommendationsContainer.innerHTML = `
+                <div class="recommendations-grid">
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            explanationContainer.style.display = 'none';
+        }
+
+        // Fetch user favorites from Node.js backend
+        async function getUserFavorites(category) {
+            let endpoint = '';
+            if (category === 'movies') {
+                endpoint = `/${userId}/favorites`;
+            } else if (category === 'books') {
+                endpoint = `/${userId}/favorite-books`;
+            }
+            if (!endpoint) return [];
+            
+            try {
+                const response = await fetch(endpoint);
+                if (!response.ok) throw new Error('Failed to fetch favorites');
+                const data = await response.json();
+                return data.map(f => f.title);
+            } catch (error) {
+                console.error('Error fetching favorites:', error);
+                return [];
+            }
+        }
+
+        // Fetch personalized recommendations from FastAPI
+        async function getUserRecommendations(category) {
+            const titles = await getUserFavorites(category);
+            let endpoint = '';
+            let defaultTitle = '';
+            if (category === 'movies') {
+                endpoint = 'http://127.0.0.1:8000/recommend/user/movie';
+                defaultTitle = 'Inception';
+            } else if (category === 'books') {
+                endpoint = 'http://127.0.0.1:8000/recommend/user/book';
+                defaultTitle = 'Harry Potter';
+            }
+            if (!endpoint) return { recommendations: [], explanation: '' };
+            
+            try {
+                let response;
+                if (titles.length === 0) {
+                    // Fallback to single default title
+                    response = await fetch(`http://127.0.0.1:8000/recommend/${category === 'movies' ? 'movie' : 'book'}/${defaultTitle}`);
+                } else {
+                    response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ titles })
+                    });
+                }
+                if (!response.ok) throw new Error('Failed to fetch recommendations');
+                const data = await response.json();
+                if (data.error) {
+                    console.error(data.error);
+                    return { recommendations: [], explanation: '' };
+                }
+                return data;
+            } catch (error) {
+                console.error(`Error fetching ${category} recommendations:`, error);
+                return { recommendations: [], explanation: '' };
+            }
+        }
+
+        // Render recommendations based on current filter
+        async function renderRecommendations() {
+            let recommendations = [];
+            let explanation = '';
+
+            if (currentFilter === 'music') {
+                recommendations = mockMusicRecommendations;
+            } else if (currentFilter === 'all') {
+                const [movieData, bookData] = await Promise.all([
+                    getUserRecommendations('movies'),
+                    getUserRecommendations('books')
+                ]);
+                recommendations = [...movieData.recommendations, ...bookData.recommendations];
+                explanation = movieData.explanation || bookData.explanation || 'Personalized recommendations based on your favorites.';
+            } else if (currentFilter === 'movies' || currentFilter === 'books') {
+                const data = await getUserRecommendations(currentFilter);
+                recommendations = data.recommendations;
+                explanation = data.explanation;
+            }
+
+            if (recommendations.length === 0) {
+                recommendationsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 4rem 0;">
+                        <i class="fas fa-search" style="font-size: 3rem; color: var(--text-tertiary); margin-bottom: 1rem;"></i>
+                        <p style="color: var(--text-secondary); font-size: 1.125rem;">No recommendations found. Add some favorites to get started!</p>
+                    </div>
+                `;
+                explanationContainer.style.display = 'none';
+                return;
+            }
+
+            const recommendationsHTML = `
+                <div class="recommendations-grid">
+                    ${recommendations.map(item => createRecommendationCard(item)).join('')}
+                </div>
+            `;
+
+            recommendationsContainer.innerHTML = recommendationsHTML;
+
+            if (explanation) {
+                explanationContainer.innerHTML = `<p>${explanation}</p>`;
+                explanationContainer.style.display = 'block';
+            } else {
+                explanationContainer.style.display = 'none';
+            }
+
+            // Add event listeners to feedback buttons
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', handleLike);
+            });
+
+            document.querySelectorAll('.dislike-btn').forEach(btn => {
+                btn.addEventListener('click', handleDislike);
+            });
+        }
+
+        // Create HTML for a recommendation card (modified to handle mixed types)
+        function createRecommendationCard(item) {
+            // Handle different field names for mixed items
+            const title = item.title || item.track_name;
+            const meta = item.genres || item.authors || item.artist_name || '';
+            const image = item.posterUrl || item.coverUrl || 'https://via.placeholder.com/500x750.png?text=No+Image';
+            const category = item.category || (item.tmdbId ? 'movies' : item.isbn ? 'books' : 'music');
+            const rating = item.rating || 4.5;  // Default if not present
+            const year = item.year || new Date().getFullYear();
+            const duration = item.duration || (category === 'books' ? `${item.pages || 300} pages` : '2h');
+
+            const metaInfo = `${year} • ${duration}`;
+
+            return `
+                <div class="recommendation-card" data-id="${item.movieId || item.isbn || Math.random()}" data-category="${category}" data-title="${title}" data-genres="${meta}" data-tmdbid="${item.tmdbId || ''}" data-isbn="${item.isbn || ''}">
+                    <div class="card-image-container">
+                        <img src="${image}" alt="${title}" class="card-image">
+                        <div class="card-gradient-overlay"></div>
+                        <div class="card-category-badge">${category}</div>
+                        <div class="card-rating">
+                            <i class="fas fa-star"></i>
+                            <span>${rating}</span>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">${title}</h3>
+                        <div class="card-meta">
+                            <span>${metaInfo}</span>
+                            <span>${meta}</span>
+                        </div>
+                        <p class="card-description">${item.description || 'No description available.'}</p>
+                        <div class="card-explanation">
+                            <div class="explanation-header">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>Why we recommend this</span>
+                            </div>
+                            <p class="explanation-text">${item.explanation || 'Personalized based on your tastes.'}</p>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn like-btn ${item.liked ? 'liked' : ''}">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span>Like</span>
+                            </button>
+                            <button class="action-btn dislike-btn ${item.disliked ? 'disliked' : ''}">
+                                <i class="fas fa-thumbs-down"></i>
+                                <span>Dislike</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Handle like button click (add to favorites via Node.js backend)
+        async function handleLike(e) {
+            e.stopPropagation();
+            const button = e.currentTarget;
+            const card = button.closest('.recommendation-card');
+            const id = card.dataset.id;
+            const category = card.dataset.category;
+            const title = card.dataset.title;
+            const genres = card.dataset.genres;  // or authors for books
+            const tmdbId = card.dataset.tmdbid;
+            const isbn = card.dataset.isbn;
+            const liked = button.classList.toggle('liked');
+
+            // Remove dislike if liked
+            if (liked) {
+                const dislikeBtn = card.querySelector('.dislike-btn');
+                dislikeBtn.classList.remove('disliked');
+            }
+
+            // Send to backend if liked
+            if (liked) {
+                let endpoint = '';
+                let body = { title, genres };  // genres can be authors for books
+                if (category === 'movies') {
+                    endpoint = `/${userId}/favorites`;
+                    body.movieId = id;
+                    body.tmdbId = tmdbId;
+                } else if (category === 'books') {
+                    endpoint = `/${userId}/favorite-books`;
+                    body.isbn = isbn;
+                    body.authors = genres;  // Reuse genres field for authors
+                } else {
+                    // Music not supported yet
+                    showFeedbackAnimation(button, 'Music favorites not supported');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    if (!response.ok) throw new Error('Failed to add favorite');
+                    showFeedbackAnimation(button, 'Added to favorites!');
+                    // Refresh recommendations after adding favorite
+                    await renderRecommendations();
+                } catch (error) {
+                    console.error('Error adding favorite:', error);
+                    button.classList.remove('liked');  // Revert on error
+                    showFeedbackAnimation(button, 'Error adding favorite');
+                }
+            } else {
+                showFeedbackAnimation(button, 'Removed like');
+            }
+        }
+
+        // Handle dislike button click (similar logic, but no backend integration for dislikes yet)
+        function handleDislike(e) {
+            e.stopPropagation();
+            const button = e.currentTarget;
+            const disliked = button.classList.toggle('disliked');
+
+            // Remove like if disliked
+            if (disliked) {
+                const likeBtn = button.closest('.card-actions').querySelector('.like-btn');
+                likeBtn.classList.remove('liked');
+            }
+
+            showFeedbackAnimation(button, disliked ? 'Disliked!' : 'Undisliked');
+            // Add backend integration if needed (e.g., for feedback loop)
+        }
+
+        // Show feedback animation (unchanged)
+        function showFeedbackAnimation(element, text) {
+            const rect = element.getBoundingClientRect();
+            const feedback = document.createElement('div');
+            feedback.style.cssText = `
+                position: fixed;
+                left: ${rect.left + rect.width / 2}px;
+                top: ${rect.top}px;
+                transform: translateX(-50%);
+                background: var(--accent);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-weight: 500;
+                font-size: 0.875rem;
+                z-index: 10000;
+                animation: feedbackFloat 1s ease-out forwards;
+                pointer-events: none;
+            `;
+            feedback.textContent = text;
+            document.body.appendChild(feedback);
+            
+            if (!document.querySelector('#feedback-animation')) {
+                const style = document.createElement('style');
+                style.id = 'feedback-animation';
+                style.textContent = `
+                    @keyframes feedbackFloat {
+                        0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                        100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            setTimeout(() => feedback.remove(), 1000);
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
