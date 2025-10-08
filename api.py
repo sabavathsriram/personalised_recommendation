@@ -7,11 +7,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import re
-from typing import List
+from typing import List, Optional
+import traceback
 
 # --- CONFIGURATION ---
 load_dotenv()
@@ -49,17 +50,36 @@ def load_movie_data():
     embeddings_df = pd.read_parquet("data/movie_embeddings.parquet")
     movies_genres_df = pd.read_csv("data/movies.csv")[['movieId', 'genres']]
     links_df = pd.read_csv("data/links.csv")[['movieId', 'tmdbId']]
+    ratings_df = pd.read_csv("data/ratings.csv")
+    
+    # Compute average rating and popularity (number of ratings)
+    avg_ratings = ratings_df.groupby('movieId')['rating'].mean().to_dict()
+    ratings_count = ratings_df.groupby('movieId').size().to_dict()
+    
     merged_df = pd.merge(embeddings_df, movies_genres_df, on='movieId', how='inner')
     final_df = pd.merge(merged_df, links_df, on='movieId', how='inner')
+    
+    # Add avg_rating and popularity
+    final_df['avg_rating'] = final_df['movieId'].map(avg_ratings).fillna(3.5)  # Default to neutral
+    final_df['popularity'] = final_df['movieId'].map(ratings_count).fillna(1)  # At least 1 to avoid div0
+    
     try:
         custom_embeddings_df = pd.read_parquet("data/custom_embeddings.parquet")
+        # For custom, assume default popularity and rating if not present
+        custom_embeddings_df['avg_rating'] = custom_embeddings_df.get('avg_rating', 3.5)
+        custom_embeddings_df['popularity'] = custom_embeddings_df.get('popularity', 100)
         final_df = pd.concat([final_df, custom_embeddings_df], ignore_index=True)
         print(f"Successfully loaded and combined {len(custom_embeddings_df)} custom movies.")
     except FileNotFoundError:
         print("No custom movies file found.")
+    
     final_df.dropna(subset=['tmdbId'], inplace=True)
     final_df['tmdbId'] = final_df['tmdbId'].astype(int)
     final_df['search_title'] = final_df['title'].apply(process_title_for_search)
+    
+    # Normalize popularity for hybrid (log scale for better distribution)
+    final_df['pop_norm'] = np.log1p(final_df['popularity']) / np.log1p(final_df['popularity'].max())
+    
     _cache["movies"] = final_df
     print("Movie data loaded and cached.")
     return final_df
@@ -70,6 +90,19 @@ def load_book_data():
     df = pd.read_parquet("data/book_embeddings.parquet")
     df.dropna(subset=['isbn', 'title', 'authors'], inplace=True)
     df['search_title'] = df['title'].apply(process_title_for_search)
+    
+    # Assume book data has 'average_rating' and 'ratings_count'; if not, fill defaults
+    if 'average_rating' not in df.columns:
+        df['average_rating'] = 4.0  # Default
+    if 'ratings_count' not in df.columns:
+        df['ratings_count'] = 1000  # Default popularity
+    
+    # Use ratings_count as popularity
+    df['popularity'] = df['ratings_count']
+    df['avg_rating'] = df['average_rating']  # Expose as avg_rating for consistency
+    # Normalize popularity (log scale)
+    df['pop_norm'] = np.log1p(df['popularity']) / np.log1p(df['popularity'].max())
+    
     _cache["books"] = df
     print("Book data loaded and cached.")
     return df
@@ -122,7 +155,7 @@ def fetch_book_cover(isbn: str):
 chat_model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 def get_movie_recommendations(title: str, df: pd.DataFrame, top_n: int = 5):
-    """Finds movies similar to a given title."""
+    """Finds movies similar to a given title using hybrid (content + popularity)."""
     search_term = process_title_for_search(title)
     movie_row = df[df['search_title'] == search_term]
     if movie_row.empty: return pd.DataFrame()
@@ -132,13 +165,18 @@ def get_movie_recommendations(title: str, df: pd.DataFrame, top_n: int = 5):
     all_embeddings = np.stack(df['embedding'].values)
     similarities = cosine_similarity(query_embedding, all_embeddings).flatten()
     
+    # Hybrid: Combine with popularity (tuned for more personalization)
+    alpha = 0.8  # Weight for content similarity
+    beta = 0.2   # Weight for popularity
+    hybrid_scores = alpha * similarities + beta * df['pop_norm'].values
+    
     original_movie_index = movie_row.index[0]
-    all_top_indices = np.argsort(similarities)[::-1][:top_n + 5]
+    all_top_indices = np.argsort(hybrid_scores)[::-1][:top_n + 5]
     top_indices = [idx for idx in all_top_indices if idx != original_movie_index][:top_n]
     return df.iloc[top_indices]
 
 def get_book_recommendations(title: str, df: pd.DataFrame, top_n: int = 5):
-    """Finds books similar to a given title using a flexible 'contains' search."""
+    """Finds books similar to a given title using hybrid (content + popularity)."""
     search_term = process_title_for_search(title)
     
     # Use .str.contains() for a partial match instead of an exact match (==)
@@ -155,8 +193,13 @@ def get_book_recommendations(title: str, df: pd.DataFrame, top_n: int = 5):
     all_embeddings = np.stack(df['embedding'].values)
     similarities = cosine_similarity(query_embedding, all_embeddings).flatten()
     
+    # Hybrid: Combine with popularity (tuned for more personalization)
+    alpha = 0.8  # Weight for content similarity
+    beta = 0.2   # Weight for popularity
+    hybrid_scores = alpha * similarities + beta * df['pop_norm'].values
+    
     original_book_index = first_match.name
-    all_top_indices = np.argsort(similarities)[::-1][:top_n + 5]
+    all_top_indices = np.argsort(hybrid_scores)[::-1][:top_n + 5]
     top_indices = [idx for idx in all_top_indices if idx != original_book_index][:top_n]
     return df.iloc[top_indices]
 
@@ -201,20 +244,49 @@ def get_explanation(original_item: str, recommended_item: str, item_type: str = 
 
 class VibeRequest(BaseModel):
     vibe_text: str
+    top_n: Optional[int] = 5
 
 def find_movies_by_vibe(vibe_text: str, df: pd.DataFrame, top_n: int = 5):
-    """Finds movies that match a text description using embeddings."""
-    embedding_model = 'text-embedding-004'
-    prompt = f"Represent this movie vibe for semantic search: {vibe_text}"
-    embedding = genai.embed_content(model=embedding_model, content=prompt)
-    query_embedding = embedding['embedding']
-    query_embedding = np.array(query_embedding).reshape(1, -1)
-    all_embeddings = np.stack(df['embedding'].values)
-    similarities = cosine_similarity(query_embedding, all_embeddings).flatten()
-    top_indices = np.argsort(similarities)[::-1][:top_n]
-    return df.iloc[top_indices]
+    """Finds movies that match a text description using embeddings + popularity boost, with fallback to keyword search."""
+    # Try embedding-based search first
+    try:
+        embedding_model = 'models/embedding-001'  # Correct model name for genai
+        prompt = f"Represent this movie vibe for semantic search: {vibe_text}"
+        embedding = genai.embed_content(model=embedding_model, content=prompt)
+        query_embedding = embedding['embedding']
+        query_embedding = np.array(query_embedding).reshape(1, -1)
+        all_embeddings = np.stack(df['embedding'].values)
+        similarities = cosine_similarity(query_embedding, all_embeddings).flatten()
+        
+        # Hybrid boost for vibe (content + popularity, tuned)
+        alpha = 0.8
+        beta = 0.2
+        hybrid_scores = alpha * similarities + beta * df['pop_norm'].values
+        
+        top_indices = np.argsort(hybrid_scores)[::-1][:top_n]
+        return df.iloc[top_indices]
+    except Exception as e:
+        print(f"Embedding failed (likely quota): {str(e)}. Falling back to keyword search.")
+        # Fallback: Keyword search on title and genres, sorted by popularity
+        mask = (
+            df['title'].str.contains(vibe_text, case=False, na=False) |
+            df['genres'].str.contains(vibe_text, case=False, na=False)
+        )
+        fallback_df = df[mask].copy()
+        if fallback_df.empty:
+            # Even broader fallback: sort all by popularity
+            fallback_df = df.copy()
+        # Sort by pop_norm descending
+        fallback_df = fallback_df.sort_values('pop_norm', ascending=False).head(top_n)
+        return fallback_df
 
 def get_user_recommendations(titles: List[str], df: pd.DataFrame, item_type: str, top_n: int = 5):
+    if not titles:
+        # Graceful fallback for empty favorites (e.g., new user)
+        print(f"No {item_type} favorites provided; using default similarity.")
+        # Could fallback to global popular items; here, return empty for now
+        return pd.DataFrame()
+    
     embeddings = []
     for title in titles:
         search_term = process_title_for_search(title)
@@ -224,13 +296,90 @@ def get_user_recommendations(titles: List[str], df: pd.DataFrame, item_type: str
             row = df[df['search_title'].str.contains(search_term, na=False)]
         if not row.empty:
             embeddings.append(np.array(row.iloc[0]['embedding']))
+    
     if not embeddings:
         return pd.DataFrame()
+    
     avg_embedding = np.mean(embeddings, axis=0).reshape(1, -1)
     all_embeddings = np.stack(df['embedding'].values)
     similarities = cosine_similarity(avg_embedding, all_embeddings).flatten()
-    top_indices = np.argsort(similarities)[::-1][:top_n]
+    
+    # Hybrid: Combine with popularity (tuned)
+    alpha = 0.8
+    beta = 0.2
+    hybrid_scores = alpha * similarities + beta * df['pop_norm'].values
+    
+    top_indices = np.argsort(hybrid_scores)[::-1][:top_n]
     return df.iloc[top_indices]
+
+# NEW: Cross-domain user recommendations (interlinks movies and books)
+class MixedUserRequest(BaseModel):
+    movie_titles: List[str] = []
+    book_titles: List[str] = []
+    top_n: Optional[int] = 5
+
+def get_mixed_user_recommendations(request: MixedUserRequest, movie_df: pd.DataFrame, book_df: pd.DataFrame, top_n: int = 5):
+    """Computes a unified query embedding from both movie and book favorites, then recommends top items across both domains using hybrid scoring."""
+    movie_embeddings = []
+    for title in request.movie_titles:
+        search_term = process_title_for_search(title)
+        row = movie_df[movie_df['search_title'] == search_term]
+        if not row.empty:
+            movie_embeddings.append(np.array(row.iloc[0]['embedding']))
+
+    book_embeddings = []
+    for title in request.book_titles:
+        search_term = process_title_for_search(title)
+        row = book_df[book_df['search_title'].str.contains(search_term, na=False)]
+        if not row.empty:
+            book_embeddings.append(np.array(row.iloc[0]['embedding']))
+
+    all_embeddings = movie_embeddings + book_embeddings
+    if not all_embeddings:
+        return pd.DataFrame()
+
+    # Average all embeddings for a unified query
+    query_embedding = np.mean(all_embeddings, axis=0).reshape(1, -1)
+
+    # Compute hybrid similarities for movies
+    movie_all_embeddings = np.stack(movie_df['embedding'].values)
+    movie_similarities = cosine_similarity(query_embedding, movie_all_embeddings).flatten()
+    alpha = 0.8
+    beta = 0.2
+    movie_hybrid = alpha * movie_similarities + beta * movie_df['pop_norm'].values
+    movie_top_indices = np.argsort(movie_hybrid)[::-1][:top_n // 2 + 1]
+
+    # Compute hybrid similarities for books
+    book_all_embeddings = np.stack(book_df['embedding'].values)
+    book_similarities = cosine_similarity(query_embedding, book_all_embeddings).flatten()
+    book_hybrid = alpha * book_similarities + beta * book_df['pop_norm'].values
+    book_top_indices = np.argsort(book_hybrid)[::-1][:top_n // 2 + 1]
+
+    # Get candidates with hybrid scores
+    movie_candidates = [(movie_hybrid[i], i, movie_df.iloc[i]) for i in movie_top_indices]
+    book_candidates = [(book_hybrid[i], i, book_df.iloc[i]) for i in book_top_indices]
+
+    # Combine and sort by hybrid similarity
+    all_candidates = movie_candidates + book_candidates
+    all_candidates.sort(key=lambda x: x[0], reverse=True)
+
+    # Take top N, adding category
+    top_recs = []
+    for sim, idx, item in all_candidates[:top_n]:
+        rec = item.copy()
+        rec['category'] = 'movie' if 'tmdbId' in rec else 'book'
+        rec['similarity_score'] = sim  # Hybrid score
+        top_recs.append(rec)
+
+    return pd.DataFrame(top_recs)
+
+class TitlesRequest(BaseModel):
+    titles: List[str]
+    top_n: Optional[int] = 5
+
+class VibeRequest(BaseModel):
+    vibe_text: str
+    top_n: Optional[int] = 5
 
 # --- API SETUP ---
 app = FastAPI()
@@ -261,13 +410,13 @@ def search_books_api(query: str):
     return {"results": matches['title'].tolist()}
 
 @app.get("/recommend/movie/{movie_title}")
-def get_movie_recommendations_api(movie_title: str):
+def get_movie_recommendations_api(movie_title: str, top_n: int = Query(5, ge=1, le=100)):
     search_term = process_title_for_search(movie_title)
     original_movie_df = movie_df[movie_df['search_title'] == search_term]
     if original_movie_df.empty: return {"error": "Movie not found"}
     original_title = original_movie_df.iloc[0]['title']
 
-    recommendations_df = get_movie_recommendations(movie_title, movie_df)
+    recommendations_df = get_movie_recommendations(movie_title, movie_df, top_n)
     if recommendations_df.empty: return {"error": "Could not find recommendations for this movie."} 
     
     results_df = recommendations_df.copy()
@@ -281,16 +430,14 @@ def get_movie_recommendations_api(movie_title: str):
     recommendations_json = results_df.to_dict('records')
     return {"recommendations": recommendations_json, "explanation": explanation_text}
 
-class TitlesRequest(BaseModel):
-    titles: List[str]
-
 @app.post("/recommend/user/movie")
 def get_user_movie_recommendations_api(request: TitlesRequest):
     titles = request.titles
+    top_n = request.top_n
     if not titles:
         return {"error": "No titles provided"}
     
-    recommendations_df = get_user_recommendations(titles, movie_df, 'movie')
+    recommendations_df = get_user_recommendations(titles, movie_df, 'movie', top_n)
     if recommendations_df.empty: return {"error": "Could not find recommendations based on your favorites."} 
     
     results_df = recommendations_df.copy()
@@ -309,10 +456,11 @@ def get_user_movie_recommendations_api(request: TitlesRequest):
 @app.post("/recommend/user/book")
 def get_user_book_recommendations_api(request: TitlesRequest):
     titles = request.titles
+    top_n = request.top_n
     if not titles:
         return {"error": "No titles provided"}
     
-    recommendations_df = get_user_recommendations(titles, book_df, 'book')
+    recommendations_df = get_user_recommendations(titles, book_df, 'book', top_n)
     if recommendations_df.empty: return {"error": "Could not find recommendations based on your favorites."}
     
     results_df = recommendations_df.copy()
@@ -328,10 +476,35 @@ def get_user_book_recommendations_api(request: TitlesRequest):
     recommendations_json = results_df.to_dict('records')
     return {"recommendations": recommendations_json, "explanation": explanation_text}
 
+# NEW: Mixed user recommendations endpoint for interlinking
+@app.post("/recommend/user/mixed")
+def get_mixed_user_recommendations_api(request: MixedUserRequest):
+    top_n = request.top_n
+    recommendations_df = get_mixed_user_recommendations(request, movie_df, book_df, top_n)
+    if recommendations_df.empty: return {"error": "Could not find recommendations based on your favorites."}
+    
+    # Prepare results with appropriate images
+    results_df = recommendations_df.copy()
+    results_df['posterUrl'] = results_df.apply(lambda row: fetch_poster(row['tmdbId']) if row['category'] == 'movie' else None, axis=1)
+    results_df['coverUrl'] = results_df.apply(lambda row: fetch_book_cover(row['isbn']) if row['category'] == 'book' else None, axis=1)
+    results_df['embedding'] = results_df['embedding'].apply(list)
+    results_df = results_df.replace({np.nan: None})
+    
+    # Explanation based on top rec
+    top_rec_title = results_df.iloc[0]['title']
+    original = f"{'movies' if request.movie_titles else ''} {'and' if request.movie_titles and request.book_titles else ''} {'books' if request.book_titles else ''} like {', '.join(request.movie_titles + request.book_titles)}"
+    multiple = bool(request.movie_titles or request.book_titles)
+    item_type = results_df.iloc[0]['category']
+    explanation_text = get_explanation(original, top_rec_title, item_type=item_type, multiple=multiple)
+    
+    recommendations_json = results_df.to_dict('records')
+    return {"recommendations": recommendations_json, "explanation": explanation_text}
+
 @app.post("/vibe")
 def find_movies_by_vibe_api(request: VibeRequest):
     """Main endpoint for vibe-based search."""
-    results_df = find_movies_by_vibe(request.vibe_text, movie_df)
+    top_n = request.top_n
+    results_df = find_movies_by_vibe(request.vibe_text, movie_df, top_n)
     if results_df.empty: return {"error": "Could not find any matches for that description."}
     
     response_df = results_df.copy()
@@ -341,13 +514,15 @@ def find_movies_by_vibe_api(request: VibeRequest):
     return {"recommendations": response_df.to_dict('records')}
 
 @app.get("/recommend/book/{book_title}")
-def get_book_recommendations_api(book_title: str):
+def get_book_recommendations_api(book_title: str, top_n: int = Query(5, ge=1, le=100)):
     search_term = process_title_for_search(book_title)
-    original_book_df = book_df[book_df['search_title'] == search_term]
+    # FIXED: Use contains for partial match consistency with books data
+    original_book_df = book_df[book_df['search_title'].str.contains(search_term, na=False)]
     if original_book_df.empty: return {"error": "Book not found"}
+    # Take first match if multiple
     original_title = original_book_df.iloc[0]['title']
     
-    recommendations_df = get_book_recommendations(book_title, book_df)
+    recommendations_df = get_book_recommendations(book_title, book_df, top_n)
     if recommendations_df.empty: return {"error": "Could not find recommendations for this book."}
     
     results_df = recommendations_df.copy()
