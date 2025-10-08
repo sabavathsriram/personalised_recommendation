@@ -130,6 +130,55 @@ header {
     font-size: 1.25rem;
 }
 
+/* NEW: Search Bar in Header */
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    max-width: 500px;
+    margin: 0 2rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 50px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.search-input:focus {
+    border-color: var(--vibrant-purple);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.search-btn {
+    padding: 12px 20px;
+    background: var(--gradient);
+    border: none;
+    border-radius: 50px;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-btn:hover {
+    transform: scale(1.05);
+}
+
 .nav-menu {
     display: flex;
     align-items: center;
@@ -310,6 +359,20 @@ header {
     z-index: 1;
 }
 
+/* Search Results Section */
+.search-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.search-results-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--vibrant-purple);
+}
+
 /* Main Content */
 .main-content {
     padding: 2rem 0 4rem;
@@ -342,6 +405,7 @@ header {
     align-items: center;
     gap: 8px;
     transition: gap 0.3s ease;
+    cursor: pointer;
 }
 
 .view-all-btn:hover {
@@ -653,6 +717,11 @@ footer {
     .nav-menu {
         display: none;
     }
+
+    .search-container {
+        margin: 0 1rem;
+        max-width: 300px;
+    }
     
     /* Adjust card image height for mobile */
     .card-image-container {
@@ -673,6 +742,14 @@ footer {
                         <i class="fas fa-compass"></i>
                     </div>
                     <span>NxtPick</span>
+                </div>
+                <!-- NEW: Search Bar -->
+                <div class="search-container">
+                    <input type="text" id="global-search-input" class="search-input" placeholder="Search movies, books...">
+                    <button id="global-search-btn" class="search-btn">
+                        <i class="fas fa-search"></i>
+                        <span>Search</span>
+                    </button>
                 </div>
                 <nav class="nav-menu">
                     <a href="#" class="nav-link">Discover</a>
@@ -722,14 +799,22 @@ footer {
 
     <main class="main-content">
         <div class="container">
+            <!-- NEW: Search Results Header (hidden by default) -->
+            <div id="search-results-header" class="search-results-header" style="display: none;">
+                <h3 id="search-results-title" class="search-results-title">Search Results</h3>
+                <button id="clear-search-btn" class="view-all-btn">
+                    <i class="fas fa-times"></i>
+                    Clear
+                </button>
+            </div>
             <div class="section-header">
                 <h2 class="section-title">
                     <i class="fas fa-magic"></i>
                     Recommended For You
                 </h2>
-                <a href="#" class="view-all-btn">
+                <button id="view-all-btn" class="view-all-btn">
                     View All <i class="fas fa-arrow-right"></i>
-                </a>
+                </button>
             </div>
             <div id="recommendations-container">
                 <!-- Loading Skeletons -->
@@ -783,15 +868,24 @@ footer {
         // DOM elements
         const recommendationsContainer = document.getElementById('recommendations-container');
         const categoryTabs = document.querySelectorAll('.category-tab');
+        const globalSearchInput = document.getElementById('global-search-input');
+        const globalSearchBtn = document.getElementById('global-search-btn');
+        const searchResultsHeader = document.getElementById('search-results-header');
+        const searchResultsTitle = document.getElementById('search-results-title');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        const viewAllBtn = document.getElementById('view-all-btn');
 
         // Current filter
         let currentFilter = 'all';
+        let isSearching = false;
+        let currentSearchQuery = '';
+        let isViewingAll = false;  // Track if viewing all recommendations
 
         // Initialize the app
         async function init() {
             showLoadingState();
             // Load recommendations immediately on page load
-            await renderRecommendations();
+            await renderRecommendations(5);  // Default top_n=5
             // Add event listeners to category tabs
             categoryTabs.forEach(tab => {
                 tab.addEventListener('click', async () => {
@@ -802,12 +896,39 @@ footer {
                     // Update filter
                     currentFilter = tab.dataset.category;
                     
-                    // Show loading state
-                    showLoadingState();
-                    
-                    // Load new recommendations
-                    await renderRecommendations();
+                    // If not searching, load new recommendations
+                    if (!isSearching) {
+                        showLoadingState();
+                        isViewingAll = false;
+                        viewAllBtn.textContent = 'View All ';
+                        await renderRecommendations(5);
+                    }
                 });
+            });
+
+            // NEW: Search functionality
+            globalSearchBtn.addEventListener('click', handleGlobalSearch);
+            globalSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleGlobalSearch();
+            });
+            clearSearchBtn.addEventListener('click', clearSearch);
+
+            // UPDATED: View All button handler
+            viewAllBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                if (isViewingAll) {
+                    // Toggle back to top 5
+                    isViewingAll = false;
+                    viewAllBtn.innerHTML = 'View All <i class="fas fa-arrow-right"></i>';
+                    showLoadingState();
+                    await renderRecommendations(5);
+                } else {
+                    // Show all (top_n=50 for practicality)
+                    isViewingAll = true;
+                    viewAllBtn.innerHTML = 'View Less <i class="fas fa-arrow-left"></i>';
+                    showLoadingState();
+                    await renderRecommendations(50);
+                }
             });
 
             // Add handler for notification button
@@ -820,12 +941,6 @@ footer {
                 window.location.href = '/profile';
             });
 
-            // Add handler for view all button
-            document.querySelector('.view-all-btn').addEventListener('click', (e) => {
-                e.preventDefault();
-                alert('View all feature coming soon!');
-            });
-
             // Optional: Add placeholders for nav links
             document.querySelectorAll('.nav-link:not([href="/profile"])').forEach(link => {
                 link.addEventListener('click', (e) => {
@@ -835,115 +950,20 @@ footer {
             });
         }
 
-        // Show loading state
-        function showLoadingState() {
-            recommendationsContainer.innerHTML = `
-                <div class="recommendations-grid">
-                    <div class="skeleton-card">
-                        <div class="skeleton skeleton-image"></div>
-                        <div class="skeleton-content">
-                            <div class="skeleton skeleton-title"></div>
-                            <div class="skeleton skeleton-text"></div>
-                            <div class="skeleton skeleton-text"></div>
-                        </div>
-                    </div>
-                    <div class="skeleton-card">
-                        <div class="skeleton skeleton-image"></div>
-                        <div class="skeleton-content">
-                            <div class="skeleton skeleton-title"></div>
-                            <div class="skeleton skeleton-text"></div>
-                            <div class="skeleton skeleton-text"></div>
-                        </div>
-                    </div>
-                    <div class="skeleton-card">
-                        <div class="skeleton skeleton-image"></div>
-                        <div class="skeleton-content">
-                            <div class="skeleton skeleton-title"></div>
-                            <div class="skeleton skeleton-text"></div>
-                            <div class="skeleton skeleton-text"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            explanationContainer.style.display = 'none';
-        }
-
-        // Fetch user favorites from Node.js backend
-        async function getUserFavorites(category) {
-            let endpoint = '';
-            if (category === 'movies') {
-                endpoint = `/${userId}/favorites`;
-            } else if (category === 'books') {
-                endpoint = `/${userId}/favorite-books`;
-            }
-            if (!endpoint) return [];
-            
-            try {
-                const response = await fetch(endpoint);
-                if (!response.ok) throw new Error('Failed to fetch favorites');
-                const data = await response.json();
-                return data.map(f => f.title);
-            } catch (error) {
-                console.error('Error fetching favorites:', error);
-                return [];
-            }
-        }
-
-        // Fetch personalized recommendations from FastAPI
-        async function getUserRecommendations(category) {
-            const titles = await getUserFavorites(category);
-            let endpoint = '';
-            let defaultTitle = '';
-            if (category === 'movies') {
-                endpoint = 'http://127.0.0.1:8000/recommend/user/movie';
-                defaultTitle = 'Inception';
-            } else if (category === 'books') {
-                endpoint = 'http://127.0.0.1:8000/recommend/user/book';
-                defaultTitle = 'Harry Potter';
-            }
-            if (!endpoint) return { recommendations: [], explanation: '' };
-            
-            try {
-                let response;
-                if (titles.length === 0) {
-                    // Fallback to single default title
-                    response = await fetch(`http://127.0.0.1:8000/recommend/${category === 'movies' ? 'movie' : 'book'}/${defaultTitle}`);
-                } else {
-                    response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ titles })
-                    });
-                }
-                if (!response.ok) throw new Error('Failed to fetch recommendations');
-                const data = await response.json();
-                if (data.error) {
-                    console.error(data.error);
-                    return { recommendations: [], explanation: '' };
-                }
-                return data;
-            } catch (error) {
-                console.error(`Error fetching ${category} recommendations:`, error);
-                return { recommendations: [], explanation: '' };
-            }
-        }
-
-        // Render recommendations based on current filter
-        async function renderRecommendations() {
+        // UPDATED: Render recommendations with optional top_n parameter
+        async function renderRecommendations(top_n = 5) {
             let recommendations = [];
             let explanation = '';
 
             if (currentFilter === 'music') {
-                recommendations = mockMusicRecommendations;
+                recommendations = mockMusicRecommendations.slice(0, top_n);  // Limit mock data
             } else if (currentFilter === 'all') {
-                const [movieData, bookData] = await Promise.all([
-                    getUserRecommendations('movies'),
-                    getUserRecommendations('books')
-                ]);
-                recommendations = [...movieData.recommendations, ...bookData.recommendations];
-                explanation = movieData.explanation || bookData.explanation || 'Personalized recommendations based on your favorites.';
+                // UPDATED: Use mixed endpoint for interlinked recommendations, pass top_n
+                const data = await getUserRecommendations('all', top_n);
+                recommendations = data.recommendations;
+                explanation = data.explanation;
             } else if (currentFilter === 'movies' || currentFilter === 'books') {
-                const data = await getUserRecommendations(currentFilter);
+                const data = await getUserRecommendations(currentFilter, top_n);
                 recommendations = data.recommendations;
                 explanation = data.explanation;
             }
@@ -984,14 +1004,271 @@ footer {
             });
         }
 
-        // Create HTML for a recommendation card (modified to handle mixed types)
+        // UPDATED: Fetch personalized recommendations from FastAPI with top_n
+        async function getUserRecommendations(category, top_n = 5) {
+            if (category === 'all') {
+                return await getMixedUserRecommendations(top_n);
+            }
+            const titles = await getUserFavorites(category);
+            let endpoint = '';
+            let defaultTitle = '';
+            if (category === 'movies') {
+                endpoint = 'http://127.0.0.1:8000/recommend/user/movie';
+                defaultTitle = 'Inception';
+            } else if (category === 'books') {
+                endpoint = 'http://127.0.0.1:8000/recommend/user/book';
+                defaultTitle = 'Harry Potter';
+            }
+            if (!endpoint) return { recommendations: [], explanation: '' };
+            
+            try {
+                let response;
+                if (titles.length === 0) {
+                    // Fallback to single default title with top_n query param
+                    response = await fetch(`http://127.0.0.1:8000/recommend/${category === 'movies' ? 'movie' : 'book'}/${defaultTitle}?top_n=${top_n}`);
+                } else {
+                    response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ titles, top_n })
+                    });
+                }
+                if (!response.ok) throw new Error('Failed to fetch recommendations');
+                const data = await response.json();
+                if (data.error) {
+                    console.error(data.error);
+                    return { recommendations: [], explanation: '' };
+                }
+                // Add category to items for consistency
+                data.recommendations.forEach(item => {
+                    item.category = category;
+                });
+                return data;
+            } catch (error) {
+                console.error(`Error fetching ${category} recommendations:`, error);
+                return { recommendations: [], explanation: '' };
+            }
+        }
+
+        // UPDATED: Fetch mixed recommendations for 'all' category with top_n
+        async function getMixedUserRecommendations(top_n = 5) {
+            const [movieTitles, bookTitles] = await Promise.all([
+                getUserFavorites('movies'),
+                getUserFavorites('books')
+            ]);
+            let endpoint = 'http://127.0.0.1:8000/recommend/user/mixed';
+            let defaultTitle = '';
+            if (movieTitles.length === 0 && bookTitles.length === 0) {
+                // Fallback to single default (e.g., movie) with top_n
+                endpoint = `http://127.0.0.1:8000/recommend/movie/Inception?top_n=${top_n}`;
+            } else {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ movie_titles: movieTitles, book_titles: bookTitles, top_n })
+                });
+                if (!response.ok) throw new Error('Failed to fetch mixed recommendations');
+                const data = await response.json();
+                if (data.error) {
+                    console.error(data.error);
+                    return { recommendations: [], explanation: '' };
+                }
+                return data;
+            }
+            // For fallback single
+            const fallbackResponse = await fetch(endpoint);
+            const fallbackData = await fallbackResponse.json();
+            if (fallbackData.error) return { recommendations: [], explanation: '' };
+            fallbackData.recommendations.forEach(rec => rec.category = 'movie');
+            return fallbackData;
+        }
+
+        // Fetch user favorites from Node.js backend
+        async function getUserFavorites(category) {
+            let endpoint = '';
+            if (category === 'movies') {
+                endpoint = `/${userId}/favorites`;
+            } else if (category === 'books') {
+                endpoint = `/${userId}/favorite-books`;
+            }
+            if (!endpoint) return [];
+            
+            try {
+                const response = await fetch(endpoint);
+                if (!response.ok) throw new Error('Failed to fetch favorites');
+                const data = await response.json();
+                return data.map(f => f.title);
+            } catch (error) {
+                console.error('Error fetching favorites:', error);
+                return [];
+            }
+        }
+
+        // NEW: Handle global search
+        async function handleGlobalSearch() {
+            const query = globalSearchInput.value.trim();
+            if (query.length < 3) {
+                alert('Please enter at least 3 characters to search.');
+                return;
+            }
+
+            currentSearchQuery = query;
+            isSearching = true;
+            searchResultsTitle.textContent = `Search results for "${query}"`;
+            searchResultsHeader.style.display = 'flex';
+
+            showLoadingState();
+            await performSearch(query, currentFilter);
+        }
+
+        // NEW: Perform search based on category
+        async function performSearch(query, category) {
+            let recommendations = [];
+            let explanation = '';
+
+            try {
+                if (category === 'music') {
+                    // Mock for music
+                    recommendations = mockMusicRecommendations.filter(item => 
+                        item.track_name.toLowerCase().includes(query.toLowerCase()) ||
+                        item.artist_name.toLowerCase().includes(query.toLowerCase())
+                    );
+                } else if (category === 'all' || category === 'movies' || category === 'books') {
+                    // Use vibe search for semantic search across domains (fallback to keyword via search API)
+                    // For simplicity, use vibe for movies/books as semantic search
+                    const vibeResponse = await fetch('http://127.0.0.1:8000/vibe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ vibe_text: query })
+                    });
+                    if (vibeResponse.ok) {
+                        const vibeData = await vibeResponse.json();
+                        recommendations = vibeData.recommendations || [];
+                        recommendations.forEach(item => item.category = 'movies');
+                    }
+
+                    // For books, add separate call if category is books or all
+                    if (category === 'books' || category === 'all') {
+                        const bookSearchResponse = await fetch(`http://127.0.0.1:8000/search/book/${query}`);
+                        if (bookSearchResponse.ok) {
+                            const bookSearchData = await bookSearchResponse.json();
+                            if (bookSearchData.results && bookSearchData.results.length > 0) {
+                                const firstBookTitle = bookSearchData.results[0];
+                                const bookRecResponse = await fetch(`http://127.0.0.1:8000/recommend/book/${firstBookTitle}`);
+                                if (bookRecResponse.ok) {
+                                    const bookRecData = await bookRecResponse.json();
+                                    const bookRecs = bookRecData.recommendations || [];
+                                    bookRecs.forEach(item => item.category = 'books');
+                                    recommendations = [...recommendations, ...bookRecs];
+                                }
+                            }
+                        }
+                    }
+
+                    explanation = `Showing results related to "${query}" across ${category}.`;
+                }
+
+                renderSearchResults(recommendations, explanation);
+            } catch (error) {
+                console.error('Search error:', error);
+                recommendationsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 4rem 0;">
+                        <i class="fas fa-search" style="font-size: 3rem; color: var(--text-tertiary); margin-bottom: 1rem;"></i>
+                        <p style="color: var(--text-secondary); font-size: 1.125rem;">Search failed. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // NEW: Render search results
+        function renderSearchResults(recommendations, explanation) {
+            if (recommendations.length === 0) {
+                recommendationsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 4rem 0;">
+                        <i class="fas fa-search" style="font-size: 3rem; color: var(--text-tertiary); margin-bottom: 1rem;"></i>
+                        <p style="color: var(--text-secondary); font-size: 1.125rem;">No results found for "${currentSearchQuery}". Try a different query!</p>
+                    </div>
+                `;
+                explanationContainer.style.display = 'none';
+                return;
+            }
+
+            const recommendationsHTML = `
+                <div class="recommendations-grid">
+                    ${recommendations.map(item => createRecommendationCard(item)).join('')}
+                </div>
+            `;
+
+            recommendationsContainer.innerHTML = recommendationsHTML;
+
+            if (explanation) {
+                explanationContainer.innerHTML = `<p>${explanation}</p>`;
+                explanationContainer.style.display = 'block';
+            } else {
+                explanationContainer.style.display = 'none';
+            }
+
+            // Add event listeners to feedback buttons
+            document.querySelectorAll('.like-btn').forEach(btn => {
+                btn.addEventListener('click', handleLike);
+            });
+
+            document.querySelectorAll('.dislike-btn').forEach(btn => {
+                btn.addEventListener('click', handleDislike);
+            });
+        }
+
+        // NEW: Clear search and return to recommendations
+        function clearSearch() {
+            isSearching = false;
+            currentSearchQuery = '';
+            globalSearchInput.value = '';
+            searchResultsHeader.style.display = 'none';
+            showLoadingState();
+            renderRecommendations(5);  // Reset to top 5
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            recommendationsContainer.innerHTML = `
+                <div class="recommendations-grid">
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            explanationContainer.style.display = 'none';
+        }
+
+        // UPDATED: Create HTML for a recommendation card (handles mixed categories better)
         function createRecommendationCard(item) {
             // Handle different field names for mixed items
             const title = item.title || item.track_name;
             const meta = item.genres || item.authors || item.artist_name || '';
             const image = item.posterUrl || item.coverUrl || 'https://via.placeholder.com/500x750.png?text=No+Image';
             const category = item.category || (item.tmdbId ? 'movies' : item.isbn ? 'books' : 'music');
-            const rating = item.rating || 4.5;  // Default if not present
+            const rating = item.avg_rating || item.rating || 4.5;  // Use avg_rating if available
             const year = item.year || new Date().getFullYear();
             const duration = item.duration || (category === 'books' ? `${item.pages || 300} pages` : '2h');
 
@@ -1002,10 +1279,10 @@ footer {
                     <div class="card-image-container">
                         <img src="${image}" alt="${title}" class="card-image">
                         <div class="card-gradient-overlay"></div>
-                        <div class="card-category-badge">${category}</div>
+                        <div class="card-category-badge">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
                         <div class="card-rating">
                             <i class="fas fa-star"></i>
-                            <span>${rating}</span>
+                            <span>${rating.toFixed(1)}</span>
                         </div>
                     </div>
                     <div class="card-content">
@@ -1082,8 +1359,10 @@ footer {
                     });
                     if (!response.ok) throw new Error('Failed to add favorite');
                     showFeedbackAnimation(button, 'Added to favorites!');
-                    // Refresh recommendations after adding favorite
-                    await renderRecommendations();
+                    // Refresh recommendations after adding favorite (UI updates automatically)
+                    if (!isSearching) {
+                        await renderRecommendations(isViewingAll ? 50 : 5);
+                    }
                 } catch (error) {
                     console.error('Error adding favorite:', error);
                     button.classList.remove('liked');  // Revert on error
