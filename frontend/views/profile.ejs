@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - ORO</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="/css/styles.css" rel="stylesheet">
+    <link href="/css/profile.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="cinema-bg">
+        <div class="floating-elements">
+            <div class="floating-element movie-reel"><i class="fas fa-film"></i></div>
+            <div class="floating-element music-note"><i class="fas fa-music"></i></div>
+            <div class="floating-element book-icon"><i class="fas fa-book"></i></div>
+            <div class="floating-element star"><i class="fas fa-star"></i></div>
+        </div>
+        <div class="particle-system"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="brand">
+                <i class="fas fa-brain brand-icon"></i>
+                <span class="brand-text">ORO</span>
+            </div>
+            <div class="nav-links">
+                <a href="/index" class="nav-link">Home</a>
+                <a href="/favorites" class="nav-link">Favorites</a>
+                <a href="/profile" class="nav-link active">My Profile</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="profile-main">
+        <div class="container">
+            <!-- User Info Section -->
+            <section class="profile-hero">
+                <div class="profile-card">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="profile-info">
+                        <h1 class="profile-name"><%= user.name %></h1>
+                        <p class="profile-email"><%= user.email %></p>
+                    </div>
+                    <a href="/logout" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </a>
+                </div>
+            </section>
+
+            <!-- Change Password Section -->
+            <section class="profile-section">
+                <h2 class="section-title">
+                    <i class="fas fa-key"></i>
+                    Change Password
+                </h2>
+                <div class="section-card">
+                    <form id="changePasswordForm" method="POST" action="/change-password">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" name="currentPassword" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" name="newPassword" class="form-input" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmNewPassword">Confirm New Password</label>
+                            <input type="password" id="confirmNewPassword" name="confirmNewPassword" class="form-input" required>
+                        </div>
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-check-circle"></i>
+                            Update Password
+                        </button>
+                        <% if (locals.error) { %>
+                            <div id="passwordMessage" class="message error"><%= error %></div>
+                        <% } else { %>
+                            <div id="passwordMessage" class="message" style="display: none;"></div>
+                        <% } %>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/js/profile.js"></script>
+</body>
+</html>
