@@ -1,0 +1,974 @@
+CREATION OF MAVEN JAVA PROJECT
+
+Step 1. Open Eclipse IDE
+   └── 1.1. Launch Eclipse workspace
+Step 2. Install Maven Plugin (if not installed)
+   └── 2.1. Go to "Help" in the top menu
+       └── 2.1.1. Click "Eclipse Marketplace"
+       └── 2.1.2. Search for "Maven Integration for Eclipse"
+       └── 2.1.3. Install the plugin if not already installed
+Step 3. Create a New Maven Project
+   └── 3.1. File -> New -> Project...
+       └── 3.1.1. Expand "Maven"
+       └── 3.1.2. Select "Maven Project" and click "Next"
+Step 4. Set Project Configuration
+   └── 4.1. Select workspace location (default or custom)
+   └── 4.2. Click "Next"
+Step 5. Choose Maven Archetype
+   └── 5.1. Select an archetype(e.g "org.apache.maven.archetypes -> maven-archetype-quickstart 1.4 ")
+   └── 5.2. Click "Next"
+Step 6. Define Project Metadata
+   └── 6.1. Group ID: (e.g., com.example)
+   └── 6.2. Artifact ID: (e.g., my-maven-project)
+   └── 6.3. Version: (default is usually fine)
+   └── 6.4. Click "Finish"
+In Console, artifacts are grouped. When prompted with Y/N, type 'Y'.
+Step 7. Maven Project Created
+   └── 7.1. Project structure is generated with a standard Maven layout
+   └── 7.2. Includes:
+       └── src/main/java (for Java source code)
+       └── src/test/java (for test code)
+       └── pom.xml (Maven configuration file)
+Step 8. Update Project Settings (if needed)
+   └── 8.1. Right-click on the project -> Maven -> Update Project...
+   └── 8.2. Ensure dependencies are up to date
+Step 9. Build and Run Maven Project
+   └── 9.1. Right-click on App.java -> Run As -> Maven Clean
+       └── 9.1.1. Right-click on App.java -> Run As -> Maven Install
+       └── 9.1.2. Right-click on App.java -> Run As -> Maven Test
+      └── 9.1.3. Right-click on App.java -> Run As -> Maven Build
+Step 10. In the Maven Build dialog:
+    └── Enter Goals: clean install test
+    └── Click on Apply -> Click on Run
+Step 11. Check console for BUILD SUCCESS message.
+Step 12. Run the application:
+    └── Right-click on App.java -> Run As -> Java Application
+    └── Output: "Hello World" displayed.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+CREATION OF MAVEN WEB JAVA PROJECT
+
+Step 1: Open Eclipse
+   └── 1.1 Launch Eclipse IDE.
+   └── 1.2 Select or create a workspace.
+
+Step 2: Create a New Maven Project
+   └── 2.1 File -> New -> Project...
+       └── 2.1.1 Expand "Maven"
+       └── 2.1.2 Select "Maven Project" and click "Next"
+
+Step 3: Choose Maven Archetype
+   └── 3.1 Select an archetype:
+           'org.apache.maven.archetypes' -> 'maven-archetype-webapp' (version 1.4)
+   └── 3.2 Click "Next"
+
+Step 4: Configure the Maven Project
+   └── 4.1 Group Id: e.g., com.example
+   └── 4.2 Artifact Id: e.g., my-web-app
+   └── 4.3 Click "Finish"
+
+Step 5: Add Maven Dependencies
+   └── 5.1 Open "pom.xml" located in the root of your project (NOT inside target folder).
+   └── 5.2 Add required web dependencies (Servlet, JSP, etc.)
+       └── Go to browser -> open mvnrepository.com
+       └── Search for "Java Servlet API"
+       └── Select the latest version
+       └── Copy the dependency and add it inside <dependencies> in pom.xml
+
+       Example:
+       <dependency>
+           <groupId>javax.servlet</groupId>
+           <artifactId>javax.servlet-api</artifactId>
+           <version>4.0.1</version>
+           <scope>provided</scope>
+       </dependency>
+
+Step 6: Configure Project for Web Deployment (if needed)
+   └── 6.1 Right-click project -> Maven -> Update Project (Force Update)
+   └── 6.2 Right-click project -> Properties -> Project Facets
+           Enable:
+           • Dynamic Web Module
+           • Java
+           • JavaScript (optional)
+   └── 6.3 Apply and click OK
+
+Step 7: Configure Tomcat Server
+   └── 7.1 Window -> Show View -> Servers
+   └── 7.2 Click "Add New Server"
+   └── 7.3 Select "Tomcat v9.0 Server" -> Next
+   └── 7.4 Set server installation directory and ports if needed
+   └── 7.5 Click "Finish"
+
+Note:
+   Editing "tomcat-users.xml" is NOT required unless you want admin panel access.
+
+Step 8: Build the Maven Project
+   └── 8.1 Right-click on the PROJECT (not file)
+       -> Run As -> Maven Clean
+   └── 8.2 Right-click on the PROJECT
+       -> Run As -> Maven Install
+   └── 8.3 Right-click on the PROJECT
+       -> Run As -> Maven Test
+   └── 8.4 Right-click on the PROJECT
+       -> Run As -> Maven Build
+           Enter Goals: clean install test
+           Click Apply -> Run
+
+Step 9: Check Console Output
+   └── Ensure you see: BUILD SUCCESS
+
+Step 10: Run the Web Application
+   └── 10.1 Right-click on index.jsp
+   └── 10.2 Select "Run on Server"
+   └── 10.3 Choose Tomcat server -> Finish
+
+Step 11: Result
+   └── The "Hello World" webpage will be displayed in the browser.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+DOCKER
+
+WORKING WITH DOCKER CLI COMMANDS (REDIS)
+
+
+SECTION 1: DOCKER CLI COMMANDS WITH REDIS
+
+
+Step 1: Pull the Redis Image
+Command:
+    docker pull redis
+
+Step 2: Run a Redis Container
+Command:
+    docker run --name my-redis -d redis
+What It Does:
+    • Creates and starts a container named "my-redis" from the redis image.
+    • The -d flag runs the container in the background.
+
+Step 3: Check Running Containers
+Command:
+    docker ps
+What It Does:
+    • Lists all running containers.
+
+Step 4: Access Redis Inside the Container
+Command:
+    docker exec -it my-redis redis-cli
+What It Does:
+    • Opens the Redis command-line tool (redis-cli) inside the running container.
+
+Example Redis Commands:
+    127.0.0.1:6379> SET name "Alice"
+    OK
+    127.0.0.1:6379> GET name
+    "Alice"
+
+Step 5: Stop the Redis Container
+Command:
+    docker stop my-redis
+What It Does:
+    • Stops the Redis container without deleting it.
+
+Step 6: Restart the Redis Container
+Command:
+    docker start my-redis
+What It Does:
+    • Starts the previously stopped container.
+
+Step 7: Remove the Redis Container
+Command:
+    docker rm my-redis
+What It Does:
+    • Deletes the container permanently.
+
+Step 8: Remove the Redis Image
+Command:
+    docker rmi redis
+What It Does:
+    • Deletes the Redis image from your local system.
+
+
+
+SECTION 2: WORKING WITH DOCKERFILE
+
+
+A Dockerfile is a text file containing instructions to create a custom Docker image.
+
+Step 1: Set Up Your Folder
+
+
+1. Windows:
+      • Create a folder: C:\DockerProjects\Redis
+      • Open Git Bash and navigate to the folder:
+            cd /c/DockerProjects/Redis
+
+2. Mac/Linux:
+      • Create a folder:
+            mkdir ~/DockerProjects/Redis
+      • Navigate inside it:
+            cd ~/DockerProjects/Redis
+
+
+Step 2: Write the Dockerfile
+
+
+1. Inside the folder, create a new file named:
+       Dockerfile
+   (no extension)
+
+2. Add the following content:
+
+       FROM redis:latest
+       CMD ["redis-server"]
+
+
+Step 3: Docker Commands (Step-by-Step)
+
+
+1. docker build -t redisnew .
+What It Does:
+    • Builds a Docker image using the Dockerfile in the current folder.
+    • -t redisnew gives the image a name/tag.
+
+2. docker run --name myredisnew -d redisnew
+What It Does:
+    • Starts a new container named "myredisnew" from the image "redisnew".
+    • -d runs the container in the background.
+
+3. docker ps
+What It Does:
+    • Shows currently running containers.
+
+4. docker stop myredisnew
+What It Does:
+    • Stops the container named "myredisnew".
+
+5. docker login
+What It Does:
+    • Logs you into your Docker Hub account.
+
+6. docker ps -a
+What It Does:
+    • Lists all containers, including stopped ones.
+
+7. docker commit 0e993d2009a1 budarajumadhurika/redis1
+What It Does:
+    • Creates a new image from the container with ID 0e993d2009a1.
+
+8. docker images
+What It Does:
+    • Lists all images on your system.
+
+9. docker push budarajumadhurika/redis1
+What It Does:
+    • Uploads the image to Docker Hub.
+
+10. docker rm 0e993d2009a1
+What It Does:
+    • Deletes the container with ID 0e993d2009a1.
+
+11. docker rmi budarajumadhurika/redis1
+What It Does:
+    • Deletes the image from your local system.
+
+12. docker ps -a
+What It Does:
+    • Shows all containers again to confirm deletion.
+
+13. docker logout
+What It Does:
+    • Logs you out of Docker Hub.
+
+14. docker pull budarajumadhurika/redis1
+What It Does:
+    • Downloads the image from Docker Hub.
+
+15. docker run --name myredis -d budarajumadhurika/redis1
+What It Does:
+    • Runs a container using the redis1 image.
+
+16. docker exec -it myredis redis-cli
+What It Does:
+    • Opens the Redis CLI inside the container.
+
+17. SET name "Abcdef"
+What It Does:
+    • Stores a key-value pair in Redis.
+
+18. GET name
+What It Does:
+    • Retrieves the value of the key "name".
+
+19. exit
+What It Does:
+    • Exits the Redis CLI.
+
+20. docker ps -a
+What It Does:
+    • Shows all containers again.
+
+21. docker stop myredis
+What It Does:
+    • Stops the "myredis" container.
+
+22. docker rm 50a6e4a9c326
+What It Does:
+    • Removes the container with ID 50a6e4a9c326.
+
+23. docker images
+What It Does:
+    • Lists all images on your system.
+
+24. docker rmi budarajumadhurika/redis1
+What It Does:
+    • Deletes the redis1 image.
+
+Step 3 (Optional): Remove Login Credentials
+
+Command:
+    docker logout
+What It Does:
+    • Logs you out of Docker Hub.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+DOCKER COMPOSE
+
+===========================================================
+PART 1 – Docker Compose with Two Servers (Nginx + TomEE)
+===========================================================
+
+Step 1 – Run two containers manually
+------------------------------------
+docker run -d -p 8010:80 nginx
+docker run -d -p 8020:8080 tomee
+
+Step 2 – Test in browser
+------------------------
+http://localhost:8010   → Nginx default page
+http://localhost:8020   → TomEE page
+
+Step 3 – Create docker-compose folder and file
+----------------------------------------------
+mkdir comp-1-server
+cd comp-1-server
+notepad docker-compose.yml
+
+Paste inside docker-compose.yml:
+--------------------------------
+services:
+  web:
+    image: nginx
+    ports:
+      - "8060:80"
+
+  db:
+    image: tomee
+    ports:
+      - "8050:8080"
+
+Step 4 – Start using docker-compose
+-----------------------------------
+docker-compose up -d
+(or: docker compose up -d)
+
+Step 5 – Test in browser
+------------------------
+http://localhost:8060   → nginx
+http://localhost:8050   → tomee
+
+
+===========================================================
+PART 2 – WordPress + MySQL using docker-compose
+===========================================================
+
+Step 1 – Create folder and compose file
+---------------------------------------
+cd C:\Users\NekshaSrinivas\SE-1
+mkdir mysql
+cd mysql
+notepad docker-compose.yml
+
+Paste inside docker-compose.yml:
+--------------------------------
+services:
+  wordpress:
+    image: wordpress:latest
+    ports:
+      - "9080:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+
+Step 2 – Start WordPress + MySQL stack
+--------------------------------------
+docker-compose up -d
+
+Step 3 – Open WordPress setup
+-----------------------------
+http://localhost:9080
+
+Follow steps:
+- Choose language
+- Enter site title
+- Enter admin username + password
+- Install WordPress
+- Login → WordPress dashboard
+
+
+===========================================================
+PART 3 – Custom Flask App + MySQL using docker-compose
+===========================================================
+
+Step 1 – Create project folder
+------------------------------
+cd C:\Users\NekshaSrinivas\SE-1
+mkdir custom_flask
+cd custom_flask
+
+Step 2 – Create Flask app (app.py)
+----------------------------------
+notepad app.py
+
+Paste:
+------
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello from 24BD5A0503 - NEKSHASRINIVAS"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+
+Step 3 – Create Dockerfile
+--------------------------
+notepad Dockerfile
+(or create Dockerfile.txt then rename to Dockerfile)
+
+Paste:
+------
+FROM python:3.10-slim
+WORKDIR /app
+COPY app.py /app
+RUN pip install flask
+CMD ["python", "app.py"]
+
+Step 4 – Create docker-compose.yml
+----------------------------------
+notepad docker-compose.yml
+
+Paste:
+------
+version: "3.9"
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+    ports:
+      - "3306:3306"
+# If port used already, change to "3307:3306"
+
+Step 5 – Build and run
+----------------------
+docker compose up --build
+(or in background)
+docker compose up --build -d
+
+Step 6 – Test Flask application
+-------------------------------
+http://localhost:5000
+
+Should display:
+Hello from 24BD5A0503 - NEKSHASRINIVAS
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+MAVEN JAVA AUTOMATION
+
+Step 1: Open Jenkins (localhost:8080) 
+  ​ ├── Click on "New Item" (left side menu)
+Step 2: Create Freestyle Project (e.g., MavenJava_Build)
+       ​├── Enter project name (e.g., MavenJava_Build)
+       ​├── Click "OK"
+└── Configure the project:
+           ​​├── Description: "Java Build demo"
+           ​​├── Source Code Management:
+           ​​​└── Git repository URL: [GitMavenJava repo URL]
+           ​​├── Branches to build: */Main   or  */master
+ ​​└── Build Steps:
+              ​     ├── Add Build Step -> "Invoke top-level Maven targets"
+                 ​​└── Maven version: MAVEN_HOME
+                ​​└── Goals: clean
+               ​├── Add Build Step -> "Invoke top-level Maven targets"
+               ​​└── Maven version: MAVEN_HOME
+               ​​└── Goals: install
+               ​└── Post-build Actions:
+                   ​       ├── Add Post Build Action -> "Archive the artifacts"
+                   ​​​└── Files to archive: **/*
+                   ​     ├── Add Post Build Action -> "Build other projects"
+                   ​​​└── Projects to build: MavenJava_Test
+                   ​​​└── Trigger: Only if build is stable
+                   ​     └── Apply and Save
+ 
+ 
+   └── Step 3: Create Freestyle Project (e.g., MavenJava_Test)
+       ​├── Enter project name (e.g., MavenJava_Test)
+       ​├── Click "OK"
+             └── Configure the project:
+            ├── Description: "Test demo"
+            ├── Build Environment:
+           ​​└── Check: "Delete the workspace before build starts"
+           ├── Add Build Step -> "Copy artifacts from another project"
+           ​​└── Project name: MavenJava_Build
+           ​​└── Build: Stable build only // tick at this
+           ​​└── Artifacts to copy: **/*
+           ├── Add Build Step -> "Invoke top-level Maven targets"
+           ​​└── Maven version: MAVEN_HOME
+           ​​└── Goals: test
+           ​​└── Post-build Actions:
+               ├── Add Post Build Action -> "Archive the artifacts"
+               ​└── Files to archive: **/*
+               ​└── Apply and Save
+ 
+   └── Step 4: Create Pipeline View for Maven Java project
+       ├── Click "+" beside "All" on the dashboard
+       ├── Enter name: MavenJava_Pipeline
+       ├── Select "Build pipeline view"        // tick here
+        |--- create
+       └── Pipeline Flow:
+           ├── Layout: Based on upstream/downstream relationship
+           ├── Initial job: MavenJava_Build
+           └── Apply and Save OK
+ 
+   └── Step 5: Run the Pipeline and Check Output
+       ├── Click on the trigger to run the pipeline
+       ├── click on the small black box to open the console to check if the build is success
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+MAVEN WEB AUTOMATION
+
+└── Step 1: Open Jenkins (localhost:8080)
+    ├── Click on "New Item" (left side menu)
+    
+    └── Step 2: Create Freestyle Project (e.g., MavenWeb_Build)
+        ├── Enter project name (e.g., MavenWeb_Build)
+        ├── Click "OK"
+        └── Configure the project:
+            ├── Description: "Web Build demo"
+            ├── Source Code Management:
+            		└── Git repository URL: [GitMavenWeb repo URL]
+            ├── Branches to build: */Main or master
+            └── Build Steps:
+                ├── Add Build Step -> "Invoke top-level Maven targets"
+                	└── Maven version: MAVEN_HOME
+                	 └── Goals: clean
+                ├── Add Build Step -> "Invoke top-level Maven targets"
+                	└── Maven version: MAVEN_HOME
+                	└── Goals: install
+                └── Post-build Actions:
+                    ├── Add Post Build Action -> "Archive the artifacts"
+                   	 └── Files to archive: **/*
+                    ├── Add Post Build Action -> "Build other projects"
+                    	└── Projects to build: MavenWeb_Test
+                    	└── Trigger: Only if build is stable
+                    └── Apply and Save
+
+    └── Step 3: Create Freestyle Project (e.g., MavenWeb_Test)
+        ├── Enter project name (e.g., MavenWeb_Test)
+        ├── Click "OK"
+        └── Configure the project:
+            ├── Description: "Test demo"
+            ├── Build Environment:
+            		└── Check: "Delete the workspace before build starts"
+            ├── Add Build Step -> "Copy artifacts from another project"
+            		└── Project name: MavenWeb_Build
+            		└── Build: Stable build only
+            		└── Artifacts to copy: **/*
+            ├── Add Build Step -> "Invoke top-level Maven targets"
+           		└── Maven version: MAVEN_HOME
+            		└── Goals: test
+            └── Post-build Actions:
+                ├── Add Post Build Action -> "Archive the artifacts"
+                	└── Files to archive: **/*
+                ├── Add Post Build Action -> "Build other projects"
+                	└── Projects to build: MavenWeb_Deploy
+                └── Apply and Save
+
+    └── Step 4: Create Freestyle Project (e.g., MavenWeb_Deploy)
+        ├── Enter project name (e.g., MavenWeb_Deploy)
+        ├── Click "OK"
+        └── Configure the project:
+            ├── Description: "Web Code Deployment"
+            ├── Build Environment:
+            		└── Check: "Delete the workspace before build starts"
+            ├── Add Build Step -> "Copy artifacts from another project"
+            		└── Project name: MavenWeb_Test
+            		└── Build: Stable build only
+               	└── Artifacts to copy: **/*
+            └── Post-build Actions:
+                ├── Add Post Build Action -> "Deploy WAR/EAR to a container"
+   └── WAR/EAR File: **/*.war
+   └── Context path: Webpath
+ └── Add container -> Tomcat 9.x remote
+└── Credentials: Username: admin, Password: 1234
+── Tomcat URL: https://localhost:8085/
+                └── Apply and Save
+
+    └── Step 5: Create Pipeline View for MavenWeb
+        ├── Click "+" beside "All" on the dashboard
+        ├── Enter name: MavenWeb_Pipeline
+        ├── Select "Build pipeline view"
+        └── Pipeline Flow:
+            ├── Layout: Based on upstream/downstream relationship
+            ├── Initial job: MavenWeb_Build
+            └── Apply and Save
+
+    └── Step 6: Run the Pipeline and Check Output
+        ├── Click on the trigger “RUN” to run the pipeline
+            Note: 
+After Click on Run -> click on the small black box to open the console to check if the build is success
+Now we see all the build has  success if it appears in green color
+        ├── Open Tomcat homepage in another tab
+        ├── Click on the "/webpath" option under the manager app       
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+PIPELINE CREATION USING SCRIPT
+
+Step 1: Open Jenkins (localhost:8080)
+      ├── Click on "New Item"
+
+Step 2: Create Pipeline Project
+      ├── Enter project name (e.g., MavenJava_Pipeline)
+      ├── Select "Pipeline"
+      └── Click "OK"
+
+Step 3: Configure Project
+      ├── General:
+      │      └── Description: "Pipeline demo"
+      ├── Build Triggers:
+      │      └── Select trigger of your choice (Poll SCM / Build periodically / etc.)
+      └── Pipeline:
+             ├── Definition: Pipeline script
+             └── Copy the below script
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven-3.9.6' //replace with system name MAVEN_HOME
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('git repo & clean') {
+            steps {
+                bat "git clone https://github.com/Vijayasri1710/SELAB_maven_java_project.git"
+                bat "mvn clean -f SELAB_maven_java_project"
+            }
+        }
+
+        stage('install') {
+            steps {
+                bat "mvn install -f SELAB_maven_java_project/pom.xml"
+            }
+        }
+
+        stage('test') {
+            steps {
+                bat "mvn test -f SELAB_maven_java_project/pom.xml"
+            }
+        }
+
+        stage('package') {
+            steps {
+                bat "mvn package -f SELAB_maven_java_project/pom.xml"
+            }
+        }
+    }
+}
+
+
+Step 4: Apply and Save
+
+Step 5: Run the Pipeline
+      ├── Click "Build Now"
+      └── Open console output to check build logs
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+MINIKUBE AND NAGIOS
+
+#MINIKUBE
+1. Open docker desktop-settings enable kubernetes
+2. open cmd
+commands :
+-> minikube start
+get pods....
+->kubectl create deployment mynginx --image=nginx
+-> minikube dashboard
+-> kubectl get deployments
+->kubectl  get pods
+->kubectl describe pods
+→ kubectl expose deployment mynginx --type=NodePort --port=8080 --target-port=80
+kubectl get svc mynginx
+→ kubectl scale deployment mynginx --replicas=4
+→ minikube dashboard
+→ kubectl port-forward svc/mynginx 8081:8080
+(open port 8081)(try 9090 if it doesnt work)
+→ minikube tunnel
+→ minikube service mynginx --url
+(it will show url open it)
+→ minikube dashboard
+→ kubectl delete deployment mynginx
+→ kubectl delete service mynginx
+→ minikube stop
+-----------------
+#NAGIOS COMMANDS
+
+docker pull jasonrivers/nagios:latest
+→ docker run --name nagiosdemo -p 8888:80 jasonrivers/nagios:latest   -> openlocalhost:8888 it will ask username:nagiosadmin , pass:nagios
+→ docker stop nagiosdemo
+→ docker rm nagiosdemo
+→ docker rmi jasonrivers/nagios:latest
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+NGROK-WEBHOOKS:
+Setting Up  Jenkins CI------using GitHub Webhook with Jenkins 
+
+Step 1: Configure Webhook in GitHub
+1.	Go to your GitHub repository.
+2.	Navigate to Settings → Webhooks.
+3.	Click “Add webhook”.
+4.	In the Payload URL field:
+o	Enter the Jenkins webhook URL in the format:
+http://<jenkins-server-url>/github-webhook/
+Note: If Jenkins is running on localhost, GitHub cannot access it directly.
+Use ngrok to expose your local Jenkins to the internet:
+
+o	ngrok.exe http <Jenkins local host:8080>
+	Use the generated ngrok URL, e.g.:
+	https://wintry-gloryingly-nam.ngrok-free.dev /github-webhook/
+5.	Set Content type to:
+application/json
+6.	Under “Which events would you like to trigger this webhook?”, select:
+o	 Just the push event
+7.	Click “Add webhook” to save.
+
+Step 2: Configure Jenkins to Accept GitHub Webhooks
+1.	Open Jenkins Dashboard.
+2.	Select the job (freestyle or pipeline) you’ve already created.
+3.	Click Configure.
+4.	Scroll down to the Build Triggers section.
+5.	Check the box: ✅GitHub hook trigger for GITScm polling
+6.	Click Save.
+
+Step 3: Test the Setup
+1.	Make any code update in your local repo and push it to GitHub.
+2.	Once pushed, GitHub will trigger the webhook.
+3.	Jenkins will automatically detect the change and start the build pipeline.
+
+outcome
+•	You’ve successfully connected GitHub and Jenkins using webhooks.
+•	Every time you push code to GitHub, Jenkins will automatically start building your project without manual intervention.
+
+
+Setting Up   Jenkins Email Notification Setup (Using Gmail with App Password)
+Creation of app password
+1. Gmail: Enable App Password (for 2-Step Verification)
+i. Go to: https://myaccount.google.com
+ii. Enable 2-Step Verification
+•	Navigate to:
+o	Security → 2-Step Verification
+o	Turn it ON
+o	Complete the OTP verification process (via phone/email)
+iii. Generate App Password for Jenkins
+•	Go to:
+o	Security → App passwords
+•	Select:
+o	App: Other (Custom name)
+o	Name: Jenkins-Demo
+•	Click Generate
+•	Copy the 16-digit app password
+o	Save it in a secure location (e.g., Notepad)
+                 2.  Jenkins Plugin Installation
+i. Open Jenkins Dashboard
+ii. Navigate to:
+•	Manage Jenkins → Manage Plugins
+iii. Install Plugin:
+•	Search for and install:
+o	Email Extension Plugin
+
+3. Configure Jenkins Global Email Settings
+i. Go to:
+•	Manage Jenkins → Configure System
+
+A. E-mail Notification Section
+Field	Value
+SMTP Server	smtp.gmail.com
+Use SMTP Auth	✅ Enabled
+User Name	Your Gmail ID (e.g., archanareddykmit@gmail.com)
+Password	Paste the 16-digit App Password
+Use SSL	✅ Enabled
+SMTP Port	465
+Reply-To Address	Your Gmail ID (same as above)
+➤ Test Configuration
+•	Click: Test configuration by sending test e-mail
+•	Provide a valid email address to receive a test mail
+•	✅ Should receive email from Jenkins
+
+B. Extended E-mail Notification Section
+Field	Value
+SMTP Server	smtp.gmail.com
+SMTP Port	465
+Use SSL	✅ Enabled
+Credentials	Add Gmail ID and App Password as Jenkins credentials
+Default Content Type	text/html or leave default
+Default Recipients	Leave empty or provide default emails
+Triggers	Select as per needs (e.g., Failure)
+
+4.  Configure Email Notifications for a Jenkins Job
+i. Go to:
+•	Jenkins → Select a Job → Configure
+
+ii. In the Post-build Actions section:
+•	Click: Add post-build action → Editable Email Notification
+A. Fill in the fields:
+Field	Value
+Project Recipient List	Add recipient email addresses (comma-separated)
+Content Type	Default (text/plain) or text/html
+Triggers	Select events (e.g., Failure, Success, etc.)
+Attachments	(Optional) Add logs, reports, etc.
+
+iii. Click Save
+
+ Now your Jenkins job is set up to send email notifications based on the build status!
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+AWS (EC2)
+
+Login to AWS Academy.
+
+Open Dashboard.
+
+Go to Learner Lab.
+
+Open Modules and click Launch.
+
+Click Start Lab.
+
+Wait until AWS turns Green.
+
+Login to AWS / Canvas account.
+
+Go to Services → EC2.
+
+Select the nearest region.
+
+Click Launch Instance.
+
+Give a name to the instance.
+
+Select Ubuntu AMI (Free-tier eligible).
+
+Select 64-bit architecture.
+
+Choose t2.micro instance type.
+
+Create a new key pair and download the .pem file.
+
+In Network Settings, enable HTTP.
+
+Enable HTTPS.
+
+Keep Storage as 8GB.
+
+Click Launch Instance.
+
+Number of instances = 1.
+
+After creation, select the instance.
+
+Click Connect.
+
+Copy the SSH “ssh -i” command.
+
+Go to PowerShell / Git Bash.
+
+Navigate (cd) to the folder containing the key pair.
+
+Paste and run the SSH command.
+
+Run: sudo apt update
+
+Run: sudo apt-get install docker.io
+
+Run: sudo apt install git
+
+Run: sudo apt install nano
+
+Run: git clone <repo-link>
+
+Run: cd <project-folder>
+
+Run: nano Dockerfile
+FROM nginx:alpine
+COPY . /usr/share/nginx/html
+
+
+Run: sudo docker build -t webapp .
+
+Run: sudo docker images
+
+Run: sudo docker run -d --name webapp -p 6060:8080 webapp
+
+Copy Public IPv4 address of instance
+
+Open: http://<public-ip>:6060
+
+If not working, edit inbound rules and add port 6060
+
+To stop container: sudo docker stop webapp
+
+To remove container: sudo docker rm <container-id>
