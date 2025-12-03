@@ -1,3 +1,7 @@
+Maven REPO URLS:
+github.com/manisai28/maven_java
+https://github.com/manisai28/maven_web_app
+
 CREATION OF MAVEN JAVA PROJECT
 
 Step 1. Open Eclipse IDE
