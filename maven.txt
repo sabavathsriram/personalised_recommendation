@@ -786,6 +786,8 @@ Note: If Jenkins is running on localhost, GitHub cannot access it directly.
 Use ngrok to expose your local Jenkins to the internet:
 
 o	ngrok.exe http <Jenkins local host:8080>
+      OR
+   ngrok http 8080(IN CMD)
 	Use the generated ngrok URL, e.g.:
 	https://wintry-gloryingly-nam.ngrok-free.dev /github-webhook/
 5.	Set Content type to:
