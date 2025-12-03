@@ -974,3 +974,154 @@ If not working, edit inbound rules and add port 6060
 To stop container: sudo docker stop webapp
 
 To remove container: sudo docker rm <container-id>
+
+
+
+MONGODB +Nodejs (app)
+1. Dockerfile (for Node App)
+
+Create a file named Dockerfile inside your project directory:
+
+# Use Node base image
+FROM node:18
+
+# Set the working directory inside container
+WORKDIR /app
+
+# Copy package.json first
+COPY package.json .
+
+# Install dependencies
+RUN npm install
+
+# Copy the entire project
+COPY . .
+
+# Expose port 3000
+EXPOSE 3000
+
+# Start the app
+CMD ["node", "app.js"]
+
+✅ 2. package.json
+
+Create a file package.json:
+
+{
+  "name": "docker-mongo-app",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0"
+  }
+}
+
+✅ 3. app.js (Node + Express + MongoDB Connection)
+
+Create app.js:
+
+const express = require("express");
+const mongoose = require("mongoose");
+
+const app = express();
+const PORT = 3000;
+
+// Get Mongo URL from environment variable in Docker Compose
+const mongoURL = process.env.MONGO_URL;
+console.log("Connecting to:", mongoURL);
+
+// MongoDB connection
+mongoose
+  .connect(mongoURL)
+  .then(() => console.log("✅ MongoDB Connected Successfully!"))
+  .catch((err) => console.log("❌ MongoDB Connection Error:", err));
+
+// Simple API Route
+app.get("/", (req, res) => {
+  res.send("Node.js + MongoDB using Docker Compose is running!");
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
+✅ 4. Your Docker Compose File (already correct)
+
+(You already provided it — it's perfect)
+
+version: '3.8'
+
+services:
+  app:
+    container_name: my_node_app
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017/mydatabase
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+
+🚀 5. Steps to Run the Application
+Step 1: Create project structure
+your-project/
+│── Dockerfile
+│── docker-compose.yml
+│── package.json
+│── app.js
+
+Step 2: Build and run containers
+
+In the project folder run:
+
+docker-compose up --build
+
+Step 3: Check logs
+docker logs my_node_app
+
+
+You should see:
+
+Connecting to: mongodb://mongo:27017/mydatabase
+MongoDB Connected Successfully!
+Server running on port 3000
+
+Step 4: Open app in browser
+
+Navigate to:
+
+👉 http://localhost:3000
+
+You will see:
+
+Node.js + MongoDB using Docker Compose is running!
+
+Step 5: Test MongoDB connection inside container
+
+Run a shell inside Mongo container:
+
+docker exec -it mongo_db bash
+
+
+Then open Mongo shell:
+
+mongosh -u root -p rootpassword
